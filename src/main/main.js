@@ -22,10 +22,10 @@ if (!gotTheLock) {
   process.exit(0);
 }
 
-// Hide from dock on macOS initially (will show temporarily for mic permission)
-if (process.platform === 'darwin') {
-  app.dock.hide();
-}
+// Keep app visible in dock for easier debugging and mic permissions
+// if (process.platform === 'darwin') {
+//   app.dock.hide();
+// }
 
 // Request microphone access on macOS
 async function requestMicrophoneAccess() {
@@ -333,11 +333,6 @@ ipcMain.handle('accept-call', async (event, callId) => {
   activeCall = pending.request;
   updateTrayMenu();
 
-  // Show in dock for mic access during call
-  if (process.platform === 'darwin') {
-    app.dock.show();
-  }
-
   // Start the voice call (will be implemented with Eleven Labs)
   // For now, return a placeholder
   if (callWindow) {
@@ -379,11 +374,6 @@ ipcMain.handle('end-call', async (event, callId, result) => {
 
   // Close the Eleven Labs WebSocket
   closeActiveSession();
-
-  // Hide from dock when call ends
-  if (process.platform === 'darwin') {
-    app.dock.hide();
-  }
 
   // Save to history
   historyDB.saveCall({
