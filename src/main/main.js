@@ -3,7 +3,7 @@
  */
 require('dotenv').config();
 
-const { app, Tray, Menu, nativeImage, BrowserWindow, ipcMain, session } = require('electron');
+const { app, Tray, Menu, nativeImage, BrowserWindow, ipcMain, session, systemPreferences } = require('electron');
 const path = require('path');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
@@ -16,9 +16,30 @@ if (!gotTheLock) {
   process.exit(0);
 }
 
-// Hide from dock on macOS
-if (process.platform === 'darwin') {
-  app.dock.hide();
+// Hide from dock on macOS - but we need dock to show for mic permission prompt!
+// if (process.platform === 'darwin') {
+//   app.dock.hide();
+// }
+
+// Request microphone access on macOS
+async function requestMicrophoneAccess() {
+  if (process.platform === 'darwin') {
+    const status = systemPreferences.getMediaAccessStatus('microphone');
+    console.log(`🎤 Microphone access status: ${status}`);
+    
+    if (status === 'not-determined') {
+      console.log('🎤 Requesting microphone access...');
+      const granted = await systemPreferences.askForMediaAccess('microphone');
+      console.log(`🎤 Microphone access ${granted ? 'granted' : 'denied'}`);
+      return granted;
+    } else if (status === 'granted') {
+      return true;
+    } else {
+      console.log('❌ Microphone access denied. Please enable in System Preferences > Privacy & Security > Microphone');
+      return false;
+    }
+  }
+  return true; // Non-macOS platforms
 }
 
 // Handle permission requests for microphone
@@ -434,7 +455,13 @@ function startAPIServer() {
 }
 
 // App lifecycle
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Request microphone access first on macOS
+  const micAccess = await requestMicrophoneAccess();
+  if (!micAccess) {
+    console.warn('⚠️ Microphone access not granted - voice calls will not work');
+  }
+  
   createTray();
   startAPIServer();
   registerVoiceHandlers();
