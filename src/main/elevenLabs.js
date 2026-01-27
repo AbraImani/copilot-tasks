@@ -98,11 +98,16 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
       switch (message.type) {
         case 'conversation_initiation_metadata':
           console.log('   ✅ Conversation initialized');
+          // Store conversation metadata if needed
+          const metadata = message.conversation_initiation_metadata_event;
+          console.log(`   Conversation ID: ${metadata?.conversation_id}`);
+          console.log(`   Audio format: ${metadata?.agent_output_audio_format}`);
           break;
           
         case 'agent_response':
-          // The text might be in different fields depending on API version
-          const agentText = message.text || message.agent_response || message.content || '';
+          // API v2 structure: message.agent_response_event.agent_response
+          const agentEvent = message.agent_response_event;
+          const agentText = agentEvent?.agent_response || message.text || '';
           console.log(`   Agent: ${agentText.slice(0, 50)}...`);
           if (agentText) {
             transcript.push({
@@ -115,8 +120,11 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
           break;
           
         case 'user_transcript':
-          const userText = message.text || message.user_transcript || message.content || '';
+          // API v2 structure: message.user_transcription_event.user_transcript
+          const userEvent = message.user_transcription_event;
+          const userText = userEvent?.user_transcript || message.text || '';
           if (userText) {
+            console.log(`   User: ${userText.slice(0, 50)}...`);
             transcript.push({
               role: 'user',
               text: userText,
@@ -127,8 +135,9 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
           break;
           
         case 'audio':
-          // Send audio to renderer for playback
-          const audioData = message.audio || message.data;
+          // API v2 structure: message.audio_event.audio_base_64
+          const audioEvent = message.audio_event;
+          const audioData = audioEvent?.audio_base_64 || message.audio || message.data;
           if (audioData && onAudioReceived) {
             onAudioReceived(audioData);
           }
@@ -136,9 +145,13 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
           break;
           
         case 'ping':
-          // Respond to pings to keep connection alive
+          // Eleven Labs ping - respond with ping_response according to their API
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'pong' }));
+            const pingEvent = message.ping_event;
+            ws.send(JSON.stringify({ 
+              type: 'pong',
+              event_id: pingEvent?.event_id 
+            }));
           }
           break;
           
