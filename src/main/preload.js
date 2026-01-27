@@ -41,4 +41,6 @@ contextBridge.exposeInMainWorld('copilotTasks', {
     ipcRenderer.invoke('end-voice-session', callId),
   sendVoiceAudio: (callId, audioData) =>
     ipcRenderer.invoke('send-voice-audio', callId, audioData),
+  sendTextMessage: (callId, text) =>
+    ipcRenderer.invoke('send-text-message', callId, text),
 });

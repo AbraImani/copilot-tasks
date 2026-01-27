@@ -180,6 +180,69 @@
       color: #9ae6b4;
     }
     
+    .text-input-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      -webkit-app-region: no-drag;
+    }
+    
+    .text-input-container.hidden {
+      display: none;
+    }
+    
+    .text-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      font-size: 13px;
+      outline: none;
+    }
+    
+    .text-input:focus {
+      border-color: rgba(102, 126, 234, 0.5);
+    }
+    
+    .text-input::placeholder {
+      color: #718096;
+    }
+    
+    .btn-send {
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    .btn-send:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-toggle-text {
+      background: rgba(255, 255, 255, 0.1);
+      color: #a0aec0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 12px;
+      font-size: 12px;
+      margin-right: auto;
+    }
+    
+    .btn-toggle-text:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .btn-toggle-text.active {
+      background: rgba(102, 126, 234, 0.2);
+      border-color: rgba(102, 126, 234, 0.5);
+      color: #a3bffa;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -223,7 +286,13 @@
     
     <div class="transcript" id="transcript"></div>
     
+    <div class="text-input-container hidden" id="text-input-container">
+      <input type="text" class="text-input" id="text-input" placeholder="Type a message..." />
+      <button class="btn btn-send" id="btn-send">Send</button>
+    </div>
+    
     <div class="actions">
+      <button class="btn btn-toggle-text" id="btn-toggle-text">⌨️ Type</button>
       <button class="btn btn-end" id="btn-end">End Call</button>
     </div>
   </div>
@@ -380,6 +449,39 @@
         };
         window.copilotTasks.endCall(currentCall.callId, result);
         clearInterval(durationInterval);
+      }
+    });
+
+    // Toggle text input
+    let textInputVisible = false;
+    document.getElementById('btn-toggle-text').addEventListener('click', () => {
+      textInputVisible = !textInputVisible;
+      document.getElementById('text-input-container').classList.toggle('hidden', !textInputVisible);
+      document.getElementById('btn-toggle-text').classList.toggle('active', textInputVisible);
+      
+      // Mute/unmute mic when switching modes
+      if (textInputVisible) {
+        stopMicrophoneCapture();
+        document.getElementById('text-input').focus();
+      } else {
+        startMicrophoneCapture();
+      }
+    });
+
+    // Send text message
+    function sendTextMessage() {
+      const input = document.getElementById('text-input');
+      const text = input.value.trim();
+      if (text && currentCall) {
+        window.copilotTasks.sendTextMessage(currentCall.callId, text);
+        input.value = '';
+      }
+    }
+
+    document.getElementById('btn-send').addEventListener('click', sendTextMessage);
+    document.getElementById('text-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendTextMessage();
       }
     });
 

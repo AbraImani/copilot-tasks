@@ -74,14 +74,16 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
   ws.on('open', () => {
     console.log('✅ Connected to Eleven Labs WebSocket');
     
-    // Send initial context
+    // Send initial context via dynamic variables
     const initMessage = {
       type: 'conversation_initiation_client_data',
-      custom_llm_extra_body: {
-        system_prompt: buildSystemPrompt(context, questions),
+      dynamic_variables: {
+        call_context: context,
+        call_questions: questions.join('\n'),
       },
     };
-    console.log('📤 Sending init message...');
+    console.log('📤 Sending init message with dynamic variables...');
+    console.log(`   call_context length: ${context.length} chars`);
     ws.send(JSON.stringify(initMessage));
   });
 
@@ -259,6 +261,17 @@ function registerVoiceHandlers() {
     if (activeWebSocket && activeWebSocket.readyState === WebSocket.OPEN) {
       activeWebSocket.send(JSON.stringify({
         user_audio_chunk: audioData
+      }));
+    }
+  });
+
+  ipcMain.handle('send-text-message', async (event, callId, text) => {
+    // Send text message to Eleven Labs WebSocket
+    console.log(`📝 Sending text message: ${text}`);
+    if (activeWebSocket && activeWebSocket.readyState === WebSocket.OPEN) {
+      activeWebSocket.send(JSON.stringify({
+        type: 'user_message',
+        text: text
       }));
     }
   });
