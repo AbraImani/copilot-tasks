@@ -121,22 +121,8 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
     activeWebSocket = null;
   });
 
-  return {
-    sendAudio: (audioData) => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'audio',
-          data: audioData, // Base64 encoded audio
-        }));
-      }
-    },
-    endSession: () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'end_conversation' }));
-        ws.close();
-      }
-    },
-  };
+  // Don't return the object with functions - manage session via separate IPC calls
+  return { started: true };
 }
 
 /**
