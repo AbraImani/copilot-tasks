@@ -244,11 +244,11 @@ function registerVoiceHandlers() {
   });
   
   ipcMain.handle('send-voice-audio', async (event, callId, audioData) => {
-    // Send audio to active WebSocket
+    // Send user audio to Eleven Labs WebSocket
+    // Format per Eleven Labs API: user_audio_chunk with base64 audio
     if (activeWebSocket && activeWebSocket.readyState === WebSocket.OPEN) {
       activeWebSocket.send(JSON.stringify({
-        type: 'audio',
-        data: audioData,
+        user_audio_chunk: audioData
       }));
     }
   });

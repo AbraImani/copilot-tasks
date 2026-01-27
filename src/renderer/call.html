@@ -247,7 +247,7 @@
     });
 
     // Handle call started
-    window.copilotTasks.onCallStarted((callId) => {
+    window.copilotTasks.onCallStarted(async (callId) => {
       document.getElementById('incoming-call').classList.add('hidden');
       document.getElementById('active-call').classList.remove('hidden');
       document.getElementById('active-topic').textContent = currentCall.topic;
@@ -261,7 +261,85 @@
         currentCall.context,
         currentCall.questions
       );
+      
+      // Start microphone capture
+      await startMicrophoneCapture();
     });
+
+    // Microphone capture
+    let mediaStream = null;
+    let audioWorklet = null;
+    let micAudioContext = null;
+
+    async function startMicrophoneCapture() {
+      try {
+        console.log('🎤 Requesting microphone access...');
+        
+        // Request microphone access
+        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            sampleRate: 16000,
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+          } 
+        });
+        
+        console.log('✅ Microphone access granted');
+        
+        // Create audio context for processing
+        micAudioContext = new AudioContext({ sampleRate: 16000 });
+        const source = micAudioContext.createMediaStreamSource(mediaStream);
+        
+        // Use ScriptProcessor for simplicity (AudioWorklet would be better for production)
+        const processor = micAudioContext.createScriptProcessor(4096, 1, 1);
+        
+        processor.onaudioprocess = (e) => {
+          const inputData = e.inputBuffer.getChannelData(0);
+          
+          // Convert float32 to int16 PCM
+          const pcm16 = new Int16Array(inputData.length);
+          for (let i = 0; i < inputData.length; i++) {
+            const s = Math.max(-1, Math.min(1, inputData[i]));
+            pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+          }
+          
+          // Convert to base64
+          const bytes = new Uint8Array(pcm16.buffer);
+          let binary = '';
+          for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          const base64Audio = btoa(binary);
+          
+          // Send to main process
+          if (currentCall) {
+            window.copilotTasks.sendVoiceAudio(currentCall.callId, base64Audio);
+          }
+        };
+        
+        source.connect(processor);
+        processor.connect(micAudioContext.destination);
+        
+        console.log('🎙️ Microphone streaming started');
+        
+      } catch (error) {
+        console.error('❌ Microphone error:', error);
+        alert('Microphone access is required for voice calls. Please allow microphone access and try again.');
+      }
+    }
+
+    function stopMicrophoneCapture() {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+      if (micAudioContext) {
+        micAudioContext.close();
+        micAudioContext = null;
+      }
+      console.log('🎤 Microphone stopped');
+    }
 
     // Accept button
     document.getElementById('btn-accept').addEventListener('click', () => {
@@ -280,6 +358,7 @@
     // End call button
     document.getElementById('btn-end').addEventListener('click', () => {
       if (currentCall) {
+        stopMicrophoneCapture();
         const result = {
           summary: 'Call ended by user',
           duration: Math.round((Date.now() - callStartTime) / 1000),
