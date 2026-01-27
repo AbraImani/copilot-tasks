@@ -391,32 +391,45 @@
       document.getElementById('call-duration').textContent = `${mins}:${secs}`;
     }
 
-    // Audio playback queue
-    let audioContext = null;
+    // Audio playback for PCM 16-bit 16kHz mono
+    let playbackAudioContext = null;
     let audioQueue = [];
     let isPlaying = false;
+    const SAMPLE_RATE = 16000;
 
-    async function playAudioChunk(base64Audio) {
-      if (!audioContext) {
-        audioContext = new AudioContext();
+    function playPcmAudio(base64Audio) {
+      if (!playbackAudioContext) {
+        playbackAudioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
       }
       
       try {
-        // Decode base64 to array buffer
+        // Decode base64 to bytes
         const binaryString = atob(base64Audio);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
         
-        // Decode audio data
-        const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+        // Convert bytes to Int16Array (PCM 16-bit)
+        const int16Data = new Int16Array(bytes.buffer);
+        
+        // Convert Int16 to Float32 for Web Audio API
+        const float32Data = new Float32Array(int16Data.length);
+        for (let i = 0; i < int16Data.length; i++) {
+          float32Data[i] = int16Data[i] / 32768.0; // Normalize to -1.0 to 1.0
+        }
+        
+        // Create audio buffer
+        const audioBuffer = playbackAudioContext.createBuffer(1, float32Data.length, SAMPLE_RATE);
+        audioBuffer.getChannelData(0).set(float32Data);
         
         // Play it
-        const source = audioContext.createBufferSource();
+        const source = playbackAudioContext.createBufferSource();
         source.buffer = audioBuffer;
-        source.connect(audioContext.destination);
+        source.connect(playbackAudioContext.destination);
         source.start();
+        
+        console.log(`🔊 Playing audio chunk: ${float32Data.length} samples`);
         
         return new Promise(resolve => {
           source.onended = resolve;
@@ -432,7 +445,7 @@
       isPlaying = true;
       while (audioQueue.length > 0) {
         const chunk = audioQueue.shift();
-        await playAudioChunk(chunk);
+        await playPcmAudio(chunk);
       }
       isPlaying = false;
     }
