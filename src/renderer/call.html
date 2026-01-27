@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incoming Call</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      -webkit-app-region: drag;
+    }
+    
+    .container {
+      padding: 24px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+    
+    .caller-info h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #a0aec0;
+    }
+    
+    .caller-info p {
+      font-size: 12px;
+      color: #718096;
+      margin-top: 2px;
+    }
+    
+    .topic {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+    
+    .topic-label {
+      font-size: 11px;
+      color: #a0aec0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    .topic-text {
+      font-size: 15px;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+    
+    .questions {
+      font-size: 12px;
+      color: #a0aec0;
+      margin-top: 12px;
+    }
+    
+    .questions ul {
+      margin-top: 4px;
+      padding-left: 16px;
+    }
+    
+    .questions li {
+      margin: 2px 0;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 12px;
+      -webkit-app-region: no-drag;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-accept {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+    }
+    
+    .btn-accept:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    }
+    
+    .btn-deny {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fc8181;
+      border: 1px solid rgba(252, 129, 129, 0.3);
+    }
+    
+    .btn-deny:hover {
+      background: rgba(252, 129, 129, 0.2);
+    }
+    
+    /* Active call state */
+    .call-active .header .avatar {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      animation: none;
+    }
+    
+    .call-active .actions {
+      justify-content: center;
+    }
+    
+    .btn-end {
+      background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+      color: white;
+      max-width: 200px;
+    }
+    
+    .transcript {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      max-height: 120px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    
+    .transcript-entry {
+      margin: 4px 0;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    .transcript-entry.agent {
+      background: rgba(102, 126, 234, 0.2);
+      color: #a3bffa;
+    }
+    
+    .transcript-entry.user {
+      background: rgba(72, 187, 120, 0.2);
+      color: #9ae6b4;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="incoming-call">
+    <div class="header">
+      <div class="avatar">🤖</div>
+      <div class="caller-info">
+        <h2>Coding Agent is calling...</h2>
+        <p>Voice assistance requested</p>
+      </div>
+    </div>
+    
+    <div class="topic">
+      <div class="topic-label">Topic</div>
+      <div class="topic-text" id="call-topic">Loading...</div>
+      <div class="questions" id="call-questions"></div>
+    </div>
+    
+    <div class="actions">
+      <button class="btn btn-deny" id="btn-deny">Deny</button>
+      <button class="btn btn-accept" id="btn-accept">Accept</button>
+    </div>
+  </div>
+  
+  <div class="container call-active hidden" id="active-call">
+    <div class="header">
+      <div class="avatar">🎙️</div>
+      <div class="caller-info">
+        <h2>On Call with Agent</h2>
+        <p id="call-duration">00:00</p>
+      </div>
+    </div>
+    
+    <div class="topic">
+      <div class="topic-label">Topic</div>
+      <div class="topic-text" id="active-topic">Loading...</div>
+    </div>
+    
+    <div class="transcript" id="transcript"></div>
+    
+    <div class="actions">
+      <button class="btn btn-end" id="btn-end">End Call</button>
+    </div>
+  </div>
+
+  <script>
+    let currentCall = null;
+    let callStartTime = null;
+    let durationInterval = null;
+
+    // Handle incoming call
+    window.copilotTasks.onIncomingCall((call) => {
+      currentCall = call;
+      document.getElementById('call-topic').textContent = call.topic;
+      
+      if (call.questions && call.questions.length > 0) {
+        const questionsHtml = '<ul>' + 
+          call.questions.map(q => `<li>${q}</li>`).join('') + 
+          '</ul>';
+        document.getElementById('call-questions').innerHTML = questionsHtml;
+      }
+    });
+
+    // Handle call started
+    window.copilotTasks.onCallStarted((callId) => {
+      document.getElementById('incoming-call').classList.add('hidden');
+      document.getElementById('active-call').classList.remove('hidden');
+      document.getElementById('active-topic').textContent = currentCall.topic;
+      
+      callStartTime = Date.now();
+      durationInterval = setInterval(updateDuration, 1000);
+      
+      // Start voice session
+      window.copilotTasks.startVoiceSession(
+        currentCall.callId,
+        currentCall.context,
+        currentCall.questions
+      );
+    });
+
+    // Accept button
+    document.getElementById('btn-accept').addEventListener('click', () => {
+      if (currentCall) {
+        window.copilotTasks.acceptCall(currentCall.callId);
+      }
+    });
+
+    // Deny button
+    document.getElementById('btn-deny').addEventListener('click', () => {
+      if (currentCall) {
+        window.copilotTasks.denyCall(currentCall.callId);
+      }
+    });
+
+    // End call button
+    document.getElementById('btn-end').addEventListener('click', () => {
+      if (currentCall) {
+        const result = {
+          summary: 'Call ended by user',
+          duration: Math.round((Date.now() - callStartTime) / 1000),
+        };
+        window.copilotTasks.endCall(currentCall.callId, result);
+        clearInterval(durationInterval);
+      }
+    });
+
+    function updateDuration() {
+      if (!callStartTime) return;
+      const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+      const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+      const secs = (elapsed % 60).toString().padStart(2, '0');
+      document.getElementById('call-duration').textContent = `${mins}:${secs}`;
+    }
+
+    // Listen for transcript updates
+    if (window.copilotTasks.onTranscript) {
+      window.copilotTasks.onTranscript((entry) => {
+        const transcriptDiv = document.getElementById('transcript');
+        const entryDiv = document.createElement('div');
+        entryDiv.className = `transcript-entry ${entry.role}`;
+        entryDiv.textContent = `${entry.role === 'agent' ? '🤖' : '👤'} ${entry.text}`;
+        transcriptDiv.appendChild(entryDiv);
+        transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+      });
+    }
+  </script>
+</body>
+</html>
