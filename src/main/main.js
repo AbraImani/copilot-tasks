@@ -1,10 +1,16 @@
 /**
  * Electron Main Process - Tray App for Voice Calls
  */
-require('dotenv').config();
-
-const { app, Tray, Menu, nativeImage, BrowserWindow, ipcMain, session, systemPreferences } = require('electron');
 const path = require('path');
+const { app } = require('electron');
+
+// Load .env from the right location (project root in dev, resources in packaged)
+const envPath = app.isPackaged 
+  ? path.join(process.resourcesPath, '.env')
+  : path.join(__dirname, '../../.env');
+require('dotenv').config({ path: envPath });
+
+const { Tray, Menu, nativeImage, BrowserWindow, ipcMain, session, systemPreferences } = require('electron');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { registerVoiceHandlers, closeActiveSession } = require('./elevenLabs');

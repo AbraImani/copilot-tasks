@@ -28,6 +28,10 @@
       {
         "from": "assets",
         "to": "assets"
+      },
+      {
+        "from": ".env",
+        "to": ".env"
       }
     ],
     "win": {
