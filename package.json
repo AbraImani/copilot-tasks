@@ -21,7 +21,7 @@
     },
     "files": [
       "src/main/**/*",
-      "dist/**/*",
+      "src/renderer/**/*",
       "node_modules/**/*"
     ],
     "extraResources": [
@@ -50,7 +50,7 @@
       "entitlements": "build-resources/entitlements.mac.plist",
       "entitlementsInherit": "build-resources/entitlements.mac.plist",
       "extendInfo": {
-        "LSUIElement": true,
+        "LSUIElement": false,
         "NSMicrophoneUsageDescription": "Copilot Tasks needs microphone access for voice calls with the coding agent."
       }
     }

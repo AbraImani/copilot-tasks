@@ -229,7 +229,7 @@ function createCallWindow() {
 
   // Load the call UI
   if (app.isPackaged) {
-    callWindow.loadFile(path.join(__dirname, '../../dist/call.html'));
+    callWindow.loadFile(path.join(__dirname, '../renderer/call.html'));
   } else {
     callWindow.loadFile(path.join(__dirname, '../renderer/call.html'));
   }
@@ -263,7 +263,7 @@ function showHistoryWindow() {
   });
 
   if (app.isPackaged) {
-    historyWindow.loadFile(path.join(__dirname, '../../dist/history.html'));
+    historyWindow.loadFile(path.join(__dirname, '../renderer/history.html'));
   } else {
     historyWindow.loadFile(path.join(__dirname, '../renderer/history.html'));
   }
