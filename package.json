@@ -70,6 +70,7 @@
     "@fluentui/react-components": "^9.56.0",
     "@fluentui/react-icons": "^2.0.260",
     "better-sqlite3": "^11.6.0",
+    "dotenv": "^17.2.3",
     "express": "^4.21.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

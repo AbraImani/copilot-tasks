@@ -22,13 +22,18 @@ Voice call assistant for GitHub Copilot CLI - enables voice conversations betwee
    npm install
    ```
 
-2. Set environment variables:
+2. Create `.env` file from example:
    ```bash
-   export ELEVEN_LABS_API_KEY=your_api_key
-   export ELEVEN_LABS_AGENT_ID=your_agent_id
+   cp .env.example .env
    ```
 
-3. Run in development:
+3. Edit `.env` with your Eleven Labs credentials:
+   ```
+   ELEVEN_LABS_API_KEY=your_api_key
+   ELEVEN_LABS_AGENT_ID=your_agent_id
+   ```
+
+4. Run in development:
    ```bash
    npm run dev
    ```

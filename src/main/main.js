@@ -1,6 +1,8 @@
 /**
  * Electron Main Process - Tray App for Voice Calls
  */
+require('dotenv').config();
+
 const { app, Tray, Menu, nativeImage, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const express = require('express');
