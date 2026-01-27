@@ -24,10 +24,21 @@ contextBridge.exposeInMainWorld('copilotTasks', {
   onCallEnded: (callback) => {
     ipcRenderer.on('call-ended', (event, callId) => callback(callId));
   },
+  onVoiceAudio: (callback) => {
+    ipcRenderer.on('voice-audio', (event, data) => callback(data));
+  },
+  onVoiceTranscript: (callback) => {
+    ipcRenderer.on('voice-transcript', (event, data) => callback(data));
+  },
+  onVoiceComplete: (callback) => {
+    ipcRenderer.on('voice-complete', (event, data) => callback(data));
+  },
   
   // Eleven Labs voice
   startVoiceSession: (callId, context, questions) => 
     ipcRenderer.invoke('start-voice-session', callId, context, questions),
   endVoiceSession: (callId) => 
     ipcRenderer.invoke('end-voice-session', callId),
+  sendVoiceAudio: (callId, audioData) =>
+    ipcRenderer.invoke('send-voice-audio', callId, audioData),
 });

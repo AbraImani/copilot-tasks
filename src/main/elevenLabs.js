@@ -43,7 +43,7 @@ When you have gathered enough information, say "I have all the details I need" a
 /**
  * Start a voice session with Eleven Labs
  */
-async function startVoiceSession(callId, context, questions, onTranscript, onComplete) {
+async function startVoiceSession(callId, context, questions, onTranscript, onComplete, onAudioReceived) {
   console.log('🎙️ Starting voice session...');
   console.log(`   Call ID: ${callId}`);
   
@@ -90,30 +90,56 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
       const message = JSON.parse(data.toString());
       console.log(`📨 Received message type: ${message.type}`);
       
+      // Debug: log full message structure for unknown types
+      if (!['ping', 'audio'].includes(message.type)) {
+        console.log(`   Full message: ${JSON.stringify(message).slice(0, 200)}`);
+      }
+      
       switch (message.type) {
+        case 'conversation_initiation_metadata':
+          console.log('   ✅ Conversation initialized');
+          break;
+          
         case 'agent_response':
-          console.log(`   Agent: ${message.text?.slice(0, 50)}...`);
-          transcript.push({
-            role: 'agent',
-            text: message.text,
-            timestamp: Date.now(),
-          });
-          onTranscript?.({ role: 'agent', text: message.text });
+          // The text might be in different fields depending on API version
+          const agentText = message.text || message.agent_response || message.content || '';
+          console.log(`   Agent: ${agentText.slice(0, 50)}...`);
+          if (agentText) {
+            transcript.push({
+              role: 'agent',
+              text: agentText,
+              timestamp: Date.now(),
+            });
+            onTranscript?.({ role: 'agent', text: agentText });
+          }
           break;
           
         case 'user_transcript':
-          transcript.push({
-            role: 'user',
-            text: message.text,
-            timestamp: Date.now(),
-          });
-          onTranscript?.({ role: 'user', text: message.text });
+          const userText = message.text || message.user_transcript || message.content || '';
+          if (userText) {
+            transcript.push({
+              role: 'user',
+              text: userText,
+              timestamp: Date.now(),
+            });
+            onTranscript?.({ role: 'user', text: userText });
+          }
           break;
           
         case 'audio':
-          // Handle audio playback (base64 encoded audio)
-          // This would be played through the system audio
-          console.log(`   🔊 Received audio chunk (${data.length} bytes)`);
+          // Send audio to renderer for playback
+          const audioData = message.audio || message.data;
+          if (audioData && onAudioReceived) {
+            onAudioReceived(audioData);
+          }
+          console.log(`   🔊 Audio chunk received`);
+          break;
+          
+        case 'ping':
+          // Respond to pings to keep connection alive
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'pong' }));
+          }
           break;
           
         case 'conversation_ended':
@@ -189,6 +215,10 @@ function registerVoiceHandlers() {
       },
       (result) => {
         event.sender.send('voice-complete', { callId, ...result });
+      },
+      (audioData) => {
+        // Send audio to renderer for playback
+        event.sender.send('voice-audio', { callId, audio: audioData });
       }
     );
   });
