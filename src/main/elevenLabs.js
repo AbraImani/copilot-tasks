@@ -4,6 +4,7 @@
  * Uses Eleven Labs' WebSocket-based conversational AI for real-time voice interaction.
  */
 const { ipcMain } = require('electron');
+const WebSocket = require('ws');
 
 const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY;
 const ELEVEN_LABS_AGENT_ID = process.env.ELEVEN_LABS_AGENT_ID;

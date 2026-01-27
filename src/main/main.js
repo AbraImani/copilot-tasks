@@ -154,9 +154,19 @@ function createCallWindow() {
     ? path.join(__dirname, 'preload.js')
     : path.join(__dirname, 'preload.js');
 
+  // Get screen dimensions for centering
+  const { screen } = require('electron');
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+  
+  const windowWidth = 420;
+  const windowHeight = 500;
+
   callWindow = new BrowserWindow({
-    width: 400,
-    height: 300,
+    width: windowWidth,
+    height: windowHeight,
+    x: Math.round((screenWidth - windowWidth) / 2),
+    y: Math.round((screenHeight - windowHeight) / 2),
     resizable: false,
     frame: false,
     alwaysOnTop: true,
@@ -178,11 +188,6 @@ function createCallWindow() {
 
   callWindow.once('ready-to-show', () => {
     callWindow.show();
-    // Position at top-right of screen
-    const { screen } = require('electron');
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width: screenWidth } = primaryDisplay.workAreaSize;
-    callWindow.setPosition(screenWidth - 420, 20);
   });
 
   callWindow.on('closed', () => {
