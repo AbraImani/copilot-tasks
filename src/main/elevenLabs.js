@@ -9,6 +9,11 @@ const WebSocket = require('ws');
 const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY;
 const ELEVEN_LABS_AGENT_ID = process.env.ELEVEN_LABS_AGENT_ID;
 
+// Debug: Log config status on load
+console.log('🔧 Eleven Labs Config:');
+console.log(`   API Key: ${ELEVEN_LABS_API_KEY ? `✅ Set (${ELEVEN_LABS_API_KEY.slice(0, 8)}...)` : '❌ NOT SET'}`);
+console.log(`   Agent ID: ${ELEVEN_LABS_AGENT_ID ? `✅ Set (${ELEVEN_LABS_AGENT_ID})` : '❌ NOT SET'}`);
+
 // WebSocket connection for voice
 let activeWebSocket = null;
 let mediaRecorder = null;
@@ -39,14 +44,24 @@ When you have gathered enough information, say "I have all the details I need" a
  * Start a voice session with Eleven Labs
  */
 async function startVoiceSession(callId, context, questions, onTranscript, onComplete) {
+  console.log('🎙️ Starting voice session...');
+  console.log(`   Call ID: ${callId}`);
+  
   if (!ELEVEN_LABS_API_KEY) {
+    console.error('❌ ELEVEN_LABS_API_KEY not set!');
     throw new Error('ELEVEN_LABS_API_KEY environment variable not set');
+  }
+  
+  if (!ELEVEN_LABS_AGENT_ID) {
+    console.error('❌ ELEVEN_LABS_AGENT_ID not set!');
+    throw new Error('ELEVEN_LABS_AGENT_ID environment variable not set');
   }
 
   const transcript = [];
   
   // Connect to Eleven Labs Conversational AI WebSocket
   const wsUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${ELEVEN_LABS_AGENT_ID}`;
+  console.log(`   Connecting to: ${wsUrl}`);
   
   const ws = new WebSocket(wsUrl, {
     headers: {
@@ -57,23 +72,27 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
   activeWebSocket = ws;
 
   ws.on('open', () => {
-    console.log('Connected to Eleven Labs');
+    console.log('✅ Connected to Eleven Labs WebSocket');
     
     // Send initial context
-    ws.send(JSON.stringify({
+    const initMessage = {
       type: 'conversation_initiation_client_data',
       custom_llm_extra_body: {
         system_prompt: buildSystemPrompt(context, questions),
       },
-    }));
+    };
+    console.log('📤 Sending init message...');
+    ws.send(JSON.stringify(initMessage));
   });
 
   ws.on('message', (data) => {
     try {
       const message = JSON.parse(data.toString());
+      console.log(`📨 Received message type: ${message.type}`);
       
       switch (message.type) {
         case 'agent_response':
+          console.log(`   Agent: ${message.text?.slice(0, 50)}...`);
           transcript.push({
             role: 'agent',
             text: message.text,
@@ -94,9 +113,11 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
         case 'audio':
           // Handle audio playback (base64 encoded audio)
           // This would be played through the system audio
+          console.log(`   🔊 Received audio chunk (${data.length} bytes)`);
           break;
           
         case 'conversation_ended':
+          console.log('📞 Conversation ended');
           // Extract summary from final messages
           const summary = extractSummary(transcript);
           onComplete?.({
@@ -105,19 +126,22 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
             duration: calculateDuration(transcript),
           });
           break;
+          
+        default:
+          console.log(`   (unhandled type: ${message.type})`);
       }
     } catch (error) {
       console.error('Error parsing Eleven Labs message:', error);
     }
   });
 
-  ws.on('close', () => {
-    console.log('Disconnected from Eleven Labs');
+  ws.on('close', (code, reason) => {
+    console.log(`🔌 Disconnected from Eleven Labs (code: ${code}, reason: ${reason || 'none'})`);
     activeWebSocket = null;
   });
 
   ws.on('error', (error) => {
-    console.error('Eleven Labs WebSocket error:', error);
+    console.error('❌ Eleven Labs WebSocket error:', error.message);
     activeWebSocket = null;
   });
 
