@@ -74,12 +74,23 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
   ws.on('open', () => {
     console.log('✅ Connected to Eleven Labs WebSocket');
     
+    // Build response format instructions
+    const responseFormat = `When you have gathered all the answers, provide a clear summary that directly answers each question. Format your final summary like this:
+
+SUMMARY:
+- Question 1: [user's answer]
+- Question 2: [user's answer]
+- etc.
+
+Be concise and specific. The coding agent will use this summary to proceed with the task.`;
+
     // Send initial context via dynamic variables
     const initMessage = {
       type: 'conversation_initiation_client_data',
       dynamic_variables: {
         call_context: context,
         call_questions: questions.join('\n'),
+        response_format: responseFormat,
       },
     };
     console.log('📤 Sending init message with dynamic variables...');

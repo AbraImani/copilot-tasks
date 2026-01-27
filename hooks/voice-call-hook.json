@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "./.github/hooks/voice-call.js",
+        "timeoutSec": 300
+      }
+    ]
+  }
+}
