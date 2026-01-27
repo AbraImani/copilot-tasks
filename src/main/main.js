@@ -28,14 +28,9 @@ async function requestMicrophoneAccess() {
     console.log(`🎤 Microphone access status: ${status}`);
     
     if (status === 'not-determined') {
-      // Need to show dock temporarily for the permission prompt
-      app.dock.show();
-      console.log('🎤 Requesting microphone access...');
-      const granted = await systemPreferences.askForMediaAccess('microphone');
-      console.log(`🎤 Microphone access ${granted ? 'granted' : 'denied'}`);
-      // Hide dock again after permission prompt
-      app.dock.hide();
-      return granted;
+      // Will be prompted when first call is accepted (dock will be shown then)
+      console.log('🎤 Microphone permission not yet determined - will prompt on first call');
+      return false;
     } else if (status === 'granted') {
       return true;
     } else {
@@ -332,6 +327,11 @@ ipcMain.handle('accept-call', async (event, callId) => {
   activeCall = pending.request;
   updateTrayMenu();
 
+  // Show in dock for mic access during call
+  if (process.platform === 'darwin') {
+    app.dock.show();
+  }
+
   // Start the voice call (will be implemented with Eleven Labs)
   // For now, return a placeholder
   if (callWindow) {
@@ -370,6 +370,11 @@ ipcMain.handle('end-call', async (event, callId, result) => {
 
   pendingCalls.delete(callId);
   activeCall = null;
+
+  // Hide from dock when call ends
+  if (process.platform === 'darwin') {
+    app.dock.hide();
+  }
 
   // Save to history
   historyDB.saveCall({
