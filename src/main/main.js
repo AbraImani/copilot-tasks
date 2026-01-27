@@ -7,7 +7,7 @@ const { app, Tray, Menu, nativeImage, BrowserWindow, ipcMain, session, systemPre
 const path = require('path');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-const { registerVoiceHandlers } = require('./elevenLabs');
+const { registerVoiceHandlers, closeActiveSession } = require('./elevenLabs');
 
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -370,6 +370,9 @@ ipcMain.handle('end-call', async (event, callId, result) => {
 
   pendingCalls.delete(callId);
   activeCall = null;
+
+  // Close the Eleven Labs WebSocket
+  closeActiveSession();
 
   // Hide from dock when call ends
   if (process.platform === 'darwin') {

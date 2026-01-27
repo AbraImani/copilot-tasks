@@ -5,8 +5,10 @@
   "main": "src/main/main.js",
   "scripts": {
     "dev": "electron .",
+    "dev:packaged": "npm run build:mac && open build/electron/mac-arm64/Copilot\\ Tasks.app",
     "test:call": "node test-call.js",
     "build": "vite build",
+    "build:mac": "electron-builder --mac --dir",
     "build:installer": "npm run build && electron-builder",
     "build:installer:win": "npm run build && electron-builder --win",
     "build:installer:mac": "npm run build && electron-builder --mac"
@@ -41,8 +43,11 @@
       "target": "dmg",
       "icon": "assets/icon.icns",
       "category": "public.app-category.productivity",
+      "entitlements": "build-resources/entitlements.mac.plist",
+      "entitlementsInherit": "build-resources/entitlements.mac.plist",
       "extendInfo": {
-        "LSUIElement": true
+        "LSUIElement": true,
+        "NSMicrophoneUsageDescription": "Copilot Tasks needs microphone access for voice calls with the coding agent."
       }
     }
   },

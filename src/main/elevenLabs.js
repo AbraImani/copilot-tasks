@@ -150,7 +150,7 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
           break;
           
         case 'ping':
-          // Eleven Labs ping - respond with ping_response according to their API
+          // Eleven Labs ping - respond with pong (only log occasionally)
           if (ws.readyState === WebSocket.OPEN) {
             const pingEvent = message.ping_event;
             ws.send(JSON.stringify({ 
@@ -158,6 +158,7 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
               event_id: pingEvent?.event_id 
             }));
           }
+          // Don't log every ping - too noisy
           break;
           
         case 'conversation_ended':
@@ -169,6 +170,10 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
             transcript,
             duration: calculateDuration(transcript),
           });
+          // Close the WebSocket
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.close();
+          }
           break;
           
         default:
@@ -259,7 +264,16 @@ function registerVoiceHandlers() {
   });
 }
 
+function closeActiveSession() {
+  if (activeWebSocket) {
+    console.log('🔌 Closing Eleven Labs WebSocket');
+    activeWebSocket.close();
+    activeWebSocket = null;
+  }
+}
+
 module.exports = {
   startVoiceSession,
   registerVoiceHandlers,
+  closeActiveSession,
 };
