@@ -16,10 +16,10 @@ if (!gotTheLock) {
   process.exit(0);
 }
 
-// Hide from dock on macOS - but we need dock to show for mic permission prompt!
-// if (process.platform === 'darwin') {
-//   app.dock.hide();
-// }
+// Hide from dock on macOS initially (will show temporarily for mic permission)
+if (process.platform === 'darwin') {
+  app.dock.hide();
+}
 
 // Request microphone access on macOS
 async function requestMicrophoneAccess() {
@@ -28,9 +28,13 @@ async function requestMicrophoneAccess() {
     console.log(`🎤 Microphone access status: ${status}`);
     
     if (status === 'not-determined') {
+      // Need to show dock temporarily for the permission prompt
+      app.dock.show();
       console.log('🎤 Requesting microphone access...');
       const granted = await systemPreferences.askForMediaAccess('microphone');
       console.log(`🎤 Microphone access ${granted ? 'granted' : 'denied'}`);
+      // Hide dock again after permission prompt
+      app.dock.hide();
       return granted;
     } else if (status === 'granted') {
       return true;
