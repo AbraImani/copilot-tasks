@@ -270,10 +270,16 @@
     let mediaStream = null;
     let audioWorklet = null;
     let micAudioContext = null;
+    let audioChunkCount = 0;
 
     async function startMicrophoneCapture() {
       try {
         console.log('🎤 Requesting microphone access...');
+        
+        // Check if getUserMedia is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('getUserMedia not supported in this browser');
+        }
         
         // Request microphone access
         mediaStream = await navigator.mediaDevices.getUserMedia({ 
@@ -286,9 +292,12 @@
         });
         
         console.log('✅ Microphone access granted');
+        console.log('   Tracks:', mediaStream.getAudioTracks().map(t => t.label).join(', '));
         
         // Create audio context for processing
         micAudioContext = new AudioContext({ sampleRate: 16000 });
+        console.log('   AudioContext sample rate:', micAudioContext.sampleRate);
+        
         const source = micAudioContext.createMediaStreamSource(mediaStream);
         
         // Use ScriptProcessor for simplicity (AudioWorklet would be better for production)
@@ -315,6 +324,10 @@
           // Send to main process
           if (currentCall) {
             window.copilotTasks.sendVoiceAudio(currentCall.callId, base64Audio);
+            audioChunkCount++;
+            if (audioChunkCount % 50 === 0) {
+              console.log(`📤 Sent ${audioChunkCount} audio chunks to Eleven Labs`);
+            }
           }
         };
         
@@ -325,7 +338,9 @@
         
       } catch (error) {
         console.error('❌ Microphone error:', error);
-        alert('Microphone access is required for voice calls. Please allow microphone access and try again.');
+        console.error('   Error name:', error.name);
+        console.error('   Error message:', error.message);
+        alert('Microphone access is required for voice calls. Error: ' + error.message);
       }
     }
 

@@ -3,7 +3,7 @@
  */
 require('dotenv').config();
 
-const { app, Tray, Menu, nativeImage, BrowserWindow, ipcMain } = require('electron');
+const { app, Tray, Menu, nativeImage, BrowserWindow, ipcMain, session } = require('electron');
 const path = require('path');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
@@ -20,6 +20,28 @@ if (!gotTheLock) {
 if (process.platform === 'darwin') {
   app.dock.hide();
 }
+
+// Handle permission requests for microphone
+app.on('ready', () => {
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    console.log(`🔐 Permission requested: ${permission}`);
+    // Allow microphone and media access
+    if (permission === 'media' || permission === 'microphone') {
+      console.log('✅ Granting microphone permission');
+      callback(true);
+    } else {
+      callback(true); // Allow other permissions too
+    }
+  });
+  
+  // Also handle permission checks
+  session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+    if (permission === 'media' || permission === 'microphone') {
+      return true;
+    }
+    return true;
+  });
+});
 
 const API_PORT = 19741;
 
