@@ -164,13 +164,18 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
           break;
           
         case 'conversation_ended':
-          console.log('📞 Conversation ended');
+          console.log('📞 Conversation ended by Eleven Labs');
+          const endEvent = message.conversation_ended_event || message;
+          console.log(`   Full event: ${JSON.stringify(endEvent).slice(0, 500)}`);
           // Extract summary from final messages
           const summary = extractSummary(transcript);
+          console.log(`   Summary: ${summary.slice(0, 200)}`);
+          console.log(`   Transcript entries: ${transcript.length}`);
           onComplete?.({
             summary,
             transcript,
             duration: calculateDuration(transcript),
+            endReason: endEvent.reason || 'unknown',
           });
           // Close the WebSocket
           if (ws.readyState === WebSocket.OPEN) {
@@ -179,7 +184,9 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
           break;
           
         default:
+          // Log all unhandled message types with full content for debugging
           console.log(`   (unhandled type: ${message.type})`);
+          console.log(`   Full message: ${JSON.stringify(message).slice(0, 300)}`);
       }
     } catch (error) {
       console.error('Error parsing Eleven Labs message:', error);
@@ -188,6 +195,20 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
 
   ws.on('close', (code, reason) => {
     console.log(`🔌 Disconnected from Eleven Labs (code: ${code}, reason: ${reason || 'none'})`);
+    console.log(`   Transcript entries: ${transcript.length}`);
+    
+    // If the socket closes, treat it as conversation ended
+    if (transcript.length > 0) {
+      const summary = extractSummary(transcript);
+      console.log(`   Final summary: ${summary.slice(0, 200)}`);
+      onComplete?.({
+        summary,
+        transcript,
+        duration: calculateDuration(transcript),
+        endReason: `websocket_close_${code}`,
+      });
+    }
+    
     activeWebSocket = null;
   });
 

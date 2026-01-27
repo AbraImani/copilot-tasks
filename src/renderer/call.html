@@ -573,7 +573,22 @@
     // Listen for call complete
     window.copilotTasks.onVoiceComplete((data) => {
       console.log('Voice call complete:', data);
-      // Could auto-end the call here
+      console.log('Summary:', data.summary);
+      console.log('Transcript:', data.transcript);
+      console.log('Duration:', data.duration);
+      console.log('End reason:', data.endReason);
+      
+      // Auto-end the call
+      if (currentCall) {
+        stopMicrophoneCapture();
+        const result = {
+          summary: data.summary || 'Call completed',
+          duration: data.duration || Math.round((Date.now() - callStartTime) / 1000),
+          transcript: data.transcript || [],
+        };
+        window.copilotTasks.endCall(currentCall.callId, result);
+        clearInterval(durationInterval);
+      }
     });
   </script>
 </body>

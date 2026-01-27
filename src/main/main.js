@@ -367,7 +367,13 @@ ipcMain.handle('deny-call', async (event, callId) => {
 
 ipcMain.handle('end-call', async (event, callId, result) => {
   const pending = pendingCalls.get(callId);
-  if (!pending) return;
+  if (!pending) {
+    console.log(`⚠️ end-call: No pending call found for ${callId}`);
+    return;
+  }
+
+  console.log(`📞 Ending call ${callId}`);
+  console.log(`   Result:`, JSON.stringify(result).slice(0, 500));
 
   pendingCalls.delete(callId);
   activeCall = null;
@@ -383,10 +389,13 @@ ipcMain.handle('end-call', async (event, callId, result) => {
     endedAt: Date.now(),
   });
 
-  pending.resolve({
+  const response = {
     status: 'completed',
     ...result,
-  });
+  };
+  console.log(`   Resolving with:`, JSON.stringify(response).slice(0, 500));
+
+  pending.resolve(response);
 
   if (callWindow) {
     callWindow.close();
