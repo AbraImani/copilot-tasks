@@ -138,10 +138,15 @@ async function startVoiceSession(callId, context, questions, onTranscript, onCom
           // API v2 structure: message.audio_event.audio_base_64
           const audioEvent = message.audio_event;
           const audioData = audioEvent?.audio_base_64 || message.audio || message.data;
-          if (audioData && onAudioReceived) {
-            onAudioReceived(audioData);
+          console.log(`   🔊 Audio chunk received, has audio_event: ${!!audioEvent}, has audio_base_64: ${!!audioEvent?.audio_base_64}, audioData length: ${audioData?.length || 0}`);
+          if (audioData) {
+            if (onAudioReceived) {
+              onAudioReceived(audioData);
+              console.log(`   📤 Sent audio to renderer`);
+            } else {
+              console.log(`   ⚠️ No onAudioReceived callback!`);
+            }
           }
-          console.log(`   🔊 Audio chunk received`);
           break;
           
         case 'ping':
