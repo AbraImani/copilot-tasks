@@ -220,6 +220,12 @@ function createCallWindow() {
     alwaysOnTop: true,
     skipTaskbar: true,
     show: false,
+    transparent: false,
+    vibrancy: 'hud',
+    visualEffectState: 'active',
+    backgroundColor: '#1e1e1e',
+    hasShadow: true,
+    titleBarStyle: 'hidden',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

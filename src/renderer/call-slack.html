@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slack</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      background: #1a1d21;
+      font-family: 'Lato', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+    
+    body {
+      -webkit-app-region: drag;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #1a1d21;
+    }
+    
+    /* Slack Header */
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: #4a154b;
+    }
+    
+    .slack-logo {
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+    }
+    
+    .header-text {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    
+    /* Main Content */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+    }
+    
+    /* Huddle Header */
+    .huddle-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .headphone-icon {
+      font-size: 20px;
+    }
+    
+    .huddle-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: #2bac76;
+    }
+    
+    /* Caller Card */
+    .caller-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2bac76 0%, #1d9a65 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    
+    .caller-info {
+      flex: 1;
+    }
+    
+    .caller-name {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    
+    .caller-action {
+      font-size: 14px;
+      color: #ababad;
+    }
+    
+    .channel-name {
+      font-size: 14px;
+      color: #1d9bd1;
+      margin-top: 4px;
+    }
+    
+    /* Participants */
+    .participants {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .participant-avatars {
+      display: flex;
+    }
+    
+    .participant-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: #5b5fc7;
+      margin-left: -8px;
+      border: 2px solid #1a1d21;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    
+    .participant-avatar:first-child {
+      margin-left: 0;
+    }
+    
+    .participants-text {
+      font-size: 13px;
+      color: #ababad;
+    }
+    
+    /* Ringing indicator */
+    .ringing {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #ababad;
+      font-size: 13px;
+    }
+    
+    .ringing-dots {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .ringing-dot {
+      width: 6px;
+      height: 6px;
+      background: #2bac76;
+      border-radius: 50%;
+      animation: dot-pulse 1.4s ease-in-out infinite;
+    }
+    
+    .ringing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .ringing-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes dot-pulse {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+    
+    /* Action Buttons */
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: auto;
+      -webkit-app-region: no-drag;
+    }
+    
+    .btn {
+      height: 40px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      padding: 0 20px;
+    }
+    
+    .btn:hover {
+      filter: brightness(1.1);
+    }
+    
+    .btn:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-dismiss {
+      background: #3d3d3d;
+      color: #ababad;
+      flex: 1;
+    }
+    
+    .btn-join {
+      background: #2bac76;
+      color: white;
+      flex: 2;
+    }
+    
+    .btn-icon {
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <svg class="slack-logo" viewBox="0 0 24 24" fill="white">
+        <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zm10.122 2.521a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zm-1.271 0a2.528 2.528 0 0 1-2.521 2.521 2.528 2.528 0 0 1-2.521-2.521V2.522A2.528 2.528 0 0 1 15.165 0a2.528 2.528 0 0 1 2.52 2.522v6.312zm-2.52 10.122a2.528 2.528 0 0 1 2.52 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.521-2.522v-2.522h2.521zm0-1.271a2.527 2.527 0 0 1-2.521-2.521 2.527 2.527 0 0 1 2.521-2.52h6.313A2.528 2.528 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.52h-6.313z"/>
+      </svg>
+      <span class="header-text">Slack</span>
+    </div>
+    
+    <div class="content">
+      <div class="huddle-header">
+        <span class="headphone-icon">🎧</span>
+        <span class="huddle-label">Huddle</span>
+      </div>
+      
+      <div class="caller-card">
+        <div class="avatar" id="avatar">M</div>
+        <div class="caller-info">
+          <div class="caller-name" id="callerName">Mike Johnson</div>
+          <div class="caller-action">started a huddle</div>
+          <div class="channel-name" id="channelName">#product-launch</div>
+        </div>
+      </div>
+      
+      <div class="participants">
+        <div class="participant-avatars">
+          <div class="participant-avatar" id="avatar2">M</div>
+        </div>
+        <span class="participants-text">1 person in huddle</span>
+      </div>
+      
+      <div class="ringing">
+        <div class="ringing-dots">
+          <div class="ringing-dot"></div>
+          <div class="ringing-dot"></div>
+          <div class="ringing-dot"></div>
+        </div>
+        <span>Waiting for you to join...</span>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button class="btn btn-dismiss" id="btnDecline">
+        Dismiss
+      </button>
+      <button class="btn btn-join" id="btnAccept">
+        <span class="btn-icon">🎧</span>
+        Join Huddle
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const callerName = urlParams.get('name') || 'Unknown';
+    const callerContext = urlParams.get('context') || '#general';
+    
+    document.getElementById('callerName').textContent = callerName;
+    document.getElementById('channelName').textContent = callerContext;
+    document.getElementById('avatar').textContent = callerName.charAt(0).toUpperCase();
+    document.getElementById('avatar2').textContent = callerName.charAt(0).toUpperCase();
+    
+    document.getElementById('btnDecline').addEventListener('click', () => {
+      if (window.electronAPI) {
+        window.electronAPI.declineSimulatedCall('slack');
+      } else {
+        window.close();
+      }
+    });
+    
+    document.getElementById('btnAccept').addEventListener('click', () => {
+      if (window.electronAPI) {
+        window.electronAPI.acceptSimulatedCall('slack', callerName);
+      } else {
+        console.log(JSON.stringify({ accepted: true, platform: 'slack', callerName }));
+        window.close();
+      }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'a' || e.key === 'A' || e.key === 'Enter') {
+        document.getElementById('btnAccept').click();
+      } else if (e.key === 'd' || e.key === 'D' || e.key === 'Escape') {
+        document.getElementById('btnDecline').click();
+      }
+    });
+  </script>
+</body>
+</html>

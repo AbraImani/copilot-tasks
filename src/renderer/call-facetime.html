@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FaceTime</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      background: #1c1c1e;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+    
+    body {
+      -webkit-app-region: drag;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(180deg, #2c2c2e 0%, #1c1c1e 100%);
+      padding: 32px 24px;
+    }
+    
+    /* FaceTime Label */
+    .facetime-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #8e8e93;
+      margin-bottom: 32px;
+    }
+    
+    .facetime-icon {
+      font-size: 16px;
+    }
+    
+    /* Avatar with rings */
+    .avatar-container {
+      position: relative;
+      margin-bottom: 24px;
+    }
+    
+    .avatar-ring-outer {
+      position: absolute;
+      top: -20px;
+      left: -20px;
+      right: -20px;
+      bottom: -20px;
+      border-radius: 50%;
+      border: 2px solid rgba(50, 215, 75, 0.2);
+      animation: ring-expand 2s ease-out infinite;
+    }
+    
+    .avatar-ring-inner {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      border-radius: 50%;
+      border: 2px solid rgba(50, 215, 75, 0.4);
+      animation: ring-expand 2s ease-out infinite 0.5s;
+    }
+    
+    @keyframes ring-expand {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.3); opacity: 0; }
+    }
+    
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #636366, #48484a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      font-weight: 500;
+      color: white;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Caller Info */
+    .caller-info {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    
+    .caller-name {
+      font-size: 28px;
+      font-weight: 500;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    
+    .call-type {
+      font-size: 17px;
+      color: #8e8e93;
+      font-weight: 400;
+    }
+    
+    /* Spacer */
+    .spacer {
+      flex: 1;
+    }
+    
+    /* Action Buttons - Apple style circular */
+    .actions {
+      display: flex;
+      gap: 60px;
+      -webkit-app-region: no-drag;
+    }
+    
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-round {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 28px;
+    }
+    
+    .btn-round:hover {
+      transform: scale(1.08);
+    }
+    
+    .btn-round:active {
+      transform: scale(0.95);
+    }
+    
+    .btn-decline {
+      background: #ff3b30;
+      box-shadow: 0 4px 20px rgba(255, 59, 48, 0.4);
+    }
+    
+    .btn-accept {
+      background: #32d74b;
+      box-shadow: 0 4px 20px rgba(50, 215, 75, 0.4);
+    }
+    
+    .btn-label {
+      font-size: 13px;
+      color: #8e8e93;
+    }
+    
+    /* Slide to answer hint (optional) */
+    .slide-hint {
+      margin-top: 24px;
+      font-size: 13px;
+      color: #636366;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="facetime-label">
+      <span class="facetime-icon">📱</span>
+      <span>FaceTime</span>
+    </div>
+    
+    <div class="avatar-container">
+      <div class="avatar-ring-outer"></div>
+      <div class="avatar-ring-inner"></div>
+      <div class="avatar" id="avatar">M</div>
+    </div>
+    
+    <div class="caller-info">
+      <div class="caller-name" id="callerName">Mom</div>
+      <div class="call-type" id="callType">FaceTime Video</div>
+    </div>
+    
+    <div class="spacer"></div>
+    
+    <div class="actions">
+      <div class="action-btn">
+        <button class="btn-round btn-decline" id="btnDecline">
+          ✕
+        </button>
+        <span class="btn-label">Decline</span>
+      </div>
+      
+      <div class="action-btn">
+        <button class="btn-round btn-accept" id="btnAccept">
+          📹
+        </button>
+        <span class="btn-label">Accept</span>
+      </div>
+    </div>
+    
+    <div class="slide-hint">Press A to accept • D to decline</div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const callerName = urlParams.get('name') || 'Unknown';
+    const callerContext = urlParams.get('context') || '';
+    const callType = urlParams.get('type') || 'video';
+    
+    document.getElementById('callerName').textContent = callerName;
+    document.getElementById('avatar').textContent = callerName.charAt(0).toUpperCase();
+    
+    if (callType === 'audio') {
+      document.getElementById('callType').textContent = 'FaceTime Audio';
+      document.getElementById('btnAccept').textContent = '📞';
+    } else {
+      document.getElementById('callType').textContent = callerContext || 'FaceTime Video';
+    }
+    
+    document.getElementById('btnDecline').addEventListener('click', () => {
+      if (window.electronAPI) {
+        window.electronAPI.declineSimulatedCall('facetime');
+      } else {
+        window.close();
+      }
+    });
+    
+    document.getElementById('btnAccept').addEventListener('click', () => {
+      if (window.electronAPI) {
+        window.electronAPI.acceptSimulatedCall('facetime', callerName);
+      } else {
+        console.log(JSON.stringify({ accepted: true, platform: 'facetime', callerName }));
+        window.close();
+      }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'a' || e.key === 'A' || e.key === 'Enter') {
+        document.getElementById('btnAccept').click();
+      } else if (e.key === 'd' || e.key === 'D' || e.key === 'Escape') {
+        document.getElementById('btnDecline').click();
+      }
+    });
+  </script>
+</body>
+</html>

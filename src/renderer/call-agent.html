@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copilot Agent</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      background: #0d1117;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: #e6edf3;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+    
+    body {
+      -webkit-app-region: drag;
+    }
+    
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: #21262d;
+      border-bottom: 1px solid #30363d;
+    }
+    
+    .copilot-logo {
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+      color: #2f81f7;
+    }
+    
+    .header-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e6edf3;
+    }
+    
+    .header-badge {
+      margin-left: 8px;
+      padding: 2px 8px;
+      background: rgba(47, 129, 247, 0.15);
+      border-radius: 12px;
+      font-size: 11px;
+      color: #2f81f7;
+      font-weight: 500;
+    }
+    
+    /* Main Content */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    
+    .incoming-label {
+      font-size: 13px;
+      color: #8b949e;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .sparkle {
+      color: #2f81f7;
+      animation: sparkle 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes sparkle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* Avatar */
+    .avatar-container {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    
+    .avatar {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #21262d, #161b22);
+      border: 2px solid #30363d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+    
+    .avatar-glow {
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      right: -4px;
+      bottom: -4px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(47, 129, 247, 0.3) 0%, transparent 70%);
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    
+    /* Caller Info */
+    .caller-name {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    
+    .caller-context {
+      font-size: 14px;
+      color: #8b949e;
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.4;
+    }
+    
+    /* Status */
+    .status {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #2f81f7;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #2f81f7;
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    
+    /* Action Buttons */
+    .actions {
+      display: flex;
+      gap: 16px;
+      margin-top: auto;
+      padding: 24px;
+      -webkit-app-region: no-drag;
+    }
+    
+    .btn {
+      height: 44px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      padding: 0 24px;
+    }
+    
+    .btn:hover {
+      filter: brightness(1.1);
+    }
+    
+    .btn:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-dismiss {
+      background: #21262d;
+      color: #f85149;
+      border-color: rgba(248, 81, 73, 0.4);
+      flex: 1;
+    }
+    
+    .btn-dismiss:hover {
+      background: rgba(248, 81, 73, 0.1);
+    }
+    
+    .btn-connect {
+      background: #238636;
+      color: white;
+      border-color: #238636;
+      flex: 2;
+    }
+    
+    .btn-connect:hover {
+      background: #2ea043;
+    }
+    
+    .btn-icon {
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <svg class="copilot-logo" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <span class="header-text">Copilot Agent</span>
+      <span class="header-badge">AI Assistant</span>
+    </div>
+    
+    <div class="content">
+      <div class="incoming-label">
+        <span class="sparkle">✦</span>
+        <span>Incoming Request</span>
+        <span class="sparkle">✦</span>
+      </div>
+      
+      <div class="avatar-container">
+        <div class="avatar-glow"></div>
+        <div class="avatar">🤖</div>
+      </div>
+      
+      <div class="caller-name" id="callerName">Copilot Agent</div>
+      <div class="caller-context" id="callerContext">Ready to assist with your task</div>
+      
+      <div class="status">
+        <span class="status-dot"></span>
+        <span>Ready to connect</span>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button class="btn btn-dismiss" id="btnDecline">
+        Dismiss
+      </button>
+      <button class="btn btn-connect" id="btnAccept">
+        <span class="btn-icon">✦</span>
+        Connect
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const callerName = urlParams.get('name') || 'Copilot Agent';
+    const callerContext = urlParams.get('context') || 'Ready to assist with your task';
+    
+    document.getElementById('callerName').textContent = callerName;
+    document.getElementById('callerContext').textContent = callerContext;
+    
+    document.getElementById('btnDecline').addEventListener('click', () => {
+      if (window.electronAPI) {
+        window.electronAPI.declineSimulatedCall('agent');
+      } else {
+        window.close();
+      }
+    });
+    
+    document.getElementById('btnAccept').addEventListener('click', () => {
+      if (window.electronAPI) {
+        window.electronAPI.acceptSimulatedCall('agent', callerName);
+      } else {
+        console.log(JSON.stringify({ accepted: true, platform: 'agent', callerName }));
+        window.close();
+      }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'a' || e.key === 'A' || e.key === 'Enter') {
+        document.getElementById('btnAccept').click();
+      } else if (e.key === 'd' || e.key === 'D' || e.key === 'Escape') {
+        document.getElementById('btnDecline').click();
+      }
+    });
+  </script>
+</body>
+</html>
