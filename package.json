@@ -81,6 +81,7 @@
   "dependencies": {
     "@fluentui/react-components": "^9.56.0",
     "@fluentui/react-icons": "^2.0.260",
+    "@github/copilot-sdk": "^0.1.8",
     "better-sqlite3": "^11.6.0",
     "dotenv": "^17.2.3",
     "express": "^4.21.0",

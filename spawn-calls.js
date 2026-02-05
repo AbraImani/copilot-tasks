@@ -101,7 +101,7 @@ app.whenReady().then(() => {
     path.join(__dirname, 'src/renderer/call-facetime.html'),
     positions.facetime.x,
     positions.facetime.y,
-    'Mom',
+    'Copilot',
     'iPhone',
     'video'
   );

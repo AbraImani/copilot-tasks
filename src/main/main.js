@@ -10,10 +10,11 @@ const envPath = app.isPackaged
   : path.join(__dirname, '../../.env');
 require('dotenv').config({ path: envPath });
 
-const { Tray, Menu, nativeImage, BrowserWindow, ipcMain, session, systemPreferences } = require('electron');
+const { Tray, Menu, nativeImage, BrowserWindow, ipcMain, session, systemPreferences, shell } = require('electron');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { registerVoiceHandlers, closeActiveSession } = require('./elevenLabs');
+const { listSessions, resumeSession, createTaskSession, stopClient } = require('./copilotSdk');
 
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -79,6 +80,9 @@ let callWindow = null;
 
 /** @type {Electron.BrowserWindow | null} */
 let historyWindow = null;
+
+/** @type {Electron.BrowserWindow | null} */
+let dashboardWindow = null;
 
 /** @type {import('express').Application} */
 let server = null;
@@ -289,6 +293,60 @@ function showSettingsWindow() {
   console.log('Settings window not yet implemented');
 }
 
+function createDashboardWindow() {
+  if (dashboardWindow) {
+    dashboardWindow.focus();
+    return dashboardWindow;
+  }
+
+  const { screen } = require('electron');
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+  
+  const windowWidth = 420;
+  const windowHeight = 520;
+
+  dashboardWindow = new BrowserWindow({
+    width: windowWidth,
+    height: windowHeight,
+    x: Math.round((screenWidth - windowWidth) / 2),
+    y: Math.round((screenHeight - windowHeight) / 2),
+    resizable: false,
+    frame: false,
+    transparent: true,
+    vibrancy: 'popover',
+    visualEffectState: 'active',
+    backgroundColor: '#00000000',
+    hasShadow: true,
+    titleBarStyle: 'hidden',
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload-dashboard.js'),
+    },
+  });
+
+  dashboardWindow.loadFile(path.join(__dirname, '../renderer/dashboard.html'));
+
+  dashboardWindow.once('ready-to-show', () => {
+    dashboardWindow.show();
+  });
+
+  // Close on blur for popover-like behavior
+  dashboardWindow.on('blur', () => {
+    if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+      dashboardWindow.close();
+    }
+  });
+
+  dashboardWindow.on('closed', () => {
+    dashboardWindow = null;
+  });
+
+  return dashboardWindow;
+}
+
 async function handleIncomingCall(callRequest) {
   console.log('Incoming call:', callRequest.topic);
 
@@ -418,6 +476,91 @@ ipcMain.handle('get-queue', async () => {
   return callQueue;
 });
 
+// Dashboard IPC handlers
+ipcMain.handle('get-dashboard-data', async () => {
+  // Fetch real sessions from Copilot SDK
+  let sessions = [];
+  try {
+    sessions = await listSessions();
+  } catch (error) {
+    console.error('Failed to fetch sessions:', error.message);
+  }
+  
+  return {
+    queue: callQueue,
+    sessions: sessions,
+    activeCall: activeCall,
+  };
+});
+
+ipcMain.handle('jump-into-session', async (event, sessionId) => {
+  console.log(`🚀 Jumping into session: ${sessionId}`);
+  
+  // Close the dashboard
+  if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+    dashboardWindow.close();
+  }
+  
+  // Resume the session via SDK
+  const result = await resumeSession(sessionId);
+  
+  if (result.success && result.workspacePath) {
+    // Open a new terminal with copilot CLI in that session
+    const copilotCmd = `copilot --resume ${sessionId}`;
+    
+    // On macOS, open Terminal with the command
+    if (process.platform === 'darwin') {
+      const script = `tell application "Terminal"
+        activate
+        do script "${copilotCmd}"
+      end tell`;
+      require('child_process').exec(`osascript -e '${script}'`);
+    } else {
+      // On other platforms, try to open in default terminal
+      shell.openExternal(`terminal://${copilotCmd}`);
+    }
+  }
+  
+  return result;
+});
+
+ipcMain.handle('new-request', async () => {
+  console.log('📞 New request initiated from dashboard');
+  
+  // Close the dashboard
+  if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+    dashboardWindow.close();
+  }
+  
+  // Create a call request for the new request
+  const callRequest = {
+    callId: `new-request-${Date.now()}`,
+    topic: 'New Task Request',
+    context: 'Tell me what you\'d like me to help you with. I\'ll listen to your request and then work on it in the background.',
+    questions: ['What would you like me to help you with?'],
+    timestamp: Date.now(),
+    isNewRequest: true,
+  };
+  
+  // Handle this as an incoming call
+  const result = await handleIncomingCall(callRequest);
+  
+  // If completed, spawn a background agent with the request
+  if (result && result.status === 'completed' && result.summary) {
+    console.log(`🤖 Spawning background agent for: ${result.summary}`);
+    
+    // Create a new session with the task
+    const taskResult = await createTaskSession(result.summary);
+    if (taskResult.success) {
+      console.log(`✅ Background agent started: ${taskResult.sessionId}`);
+    } else {
+      console.error(`❌ Failed to start background agent: ${taskResult.error}`);
+    }
+  }
+  
+  return result;
+});
+
 // HTTP API Server
 function startAPIServer() {
   const expressApp = express();
@@ -495,8 +638,18 @@ app.on('window-all-closed', (e) => {
   e.preventDefault();
 });
 
-app.on('before-quit', () => {
+// Show dashboard when dock icon is clicked
+app.on('activate', () => {
+  // Only show dashboard if no other windows are open
+  if (!callWindow && !historyWindow) {
+    createDashboardWindow();
+  }
+});
+
+app.on('before-quit', async () => {
   if (httpServer) {
     httpServer.close();
   }
+  // Stop the Copilot SDK client
+  await stopClient();
 });

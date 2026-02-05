@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copilot Tasks</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+      background: transparent;
+      color: #ffffff;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      -webkit-app-region: drag;
+    }
+
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      background: rgba(30, 30, 30, 0.75);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      -webkit-app-region: drag;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .new-request-btn {
+      -webkit-app-region: no-drag;
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      border: none;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    .new-request-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+    }
+
+    .new-request-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Sections */
+    .sections {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-app-region: no-drag;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .section-badge {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Cards */
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-repo {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 2px;
+    }
+
+    .card-activity {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-users {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      border: 2px solid rgba(30, 30, 30, 0.8);
+      margin-left: -8px;
+    }
+
+    .avatar:first-child {
+      margin-left: 0;
+    }
+
+    .card-time {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn-jump {
+      background: rgba(124, 58, 237, 0.2);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      color: #a855f7;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-jump:hover {
+      background: rgba(124, 58, 237, 0.3);
+    }
+
+    /* Status indicators */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .status-active {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+    }
+
+    .status-idle {
+      background: rgba(234, 179, 8, 0.15);
+      color: #facc15;
+    }
+
+    .status-disconnected {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-active .status-dot {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Queue card */
+    .queue-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+    }
+
+    .queue-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .queue-info {
+      flex: 1;
+    }
+
+    .queue-topic {
+      font-size: 14px;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .queue-context {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 2px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+      opacity: 0.5;
+    }
+
+    .empty-text {
+      font-size: 13px;
+    }
+
+    /* Branch tag */
+    .branch-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    /* Scrollbar */
+    .sections::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sections::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sections::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    .sections::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">✦</div>
+        <span class="title">Copilot Tasks</span>
+      </div>
+      <button class="new-request-btn" id="newRequestBtn">
+        <span>✦</span> New Request
+      </button>
+    </div>
+
+    <div class="sections">
+      <!-- Call Queue Section -->
+      <div class="section" id="queueSection">
+        <div class="section-header">
+          <span class="section-title">Call Queue</span>
+          <span class="section-badge" id="queueBadge">0</span>
+        </div>
+        <div id="queueList">
+          <div class="empty-state">
+            <div class="empty-icon">📞</div>
+            <div class="empty-text">No pending calls</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sessions Section -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">Sessions</span>
+          <span class="section-badge" id="sessionsBadge">0</span>
+        </div>
+        <div id="sessionsList">
+          <div class="empty-state">
+            <div class="empty-icon">💻</div>
+            <div class="empty-text">No active sessions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Time formatting
+    function formatTime(timestamp) {
+      const now = Date.now();
+      const diff = now - timestamp;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      return `${days}d ago`;
+    }
+
+    // Get initials from name
+    function getInitials(name) {
+      return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    }
+
+    // Render queue
+    function renderQueue(queue) {
+      const queueList = document.getElementById('queueList');
+      const queueBadge = document.getElementById('queueBadge');
+      
+      queueBadge.textContent = queue.length;
+
+      if (queue.length === 0) {
+        queueList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📞</div>
+            <div class="empty-text">No pending calls</div>
+          </div>
+        `;
+        return;
+      }
+
+      queueList.innerHTML = queue.map(call => `
+        <div class="card queue-card" data-call-id="${call.callId}">
+          <div class="queue-icon">📞</div>
+          <div class="queue-info">
+            <div class="queue-topic">${escapeHtml(call.topic)}</div>
+            <div class="queue-context">${escapeHtml(call.context || 'Waiting...')}</div>
+          </div>
+          <div class="card-time">${formatTime(call.timestamp)}</div>
+        </div>
+      `).join('');
+    }
+
+    // Render sessions
+    function renderSessions(sessions) {
+      const sessionsList = document.getElementById('sessionsList');
+      const sessionsBadge = document.getElementById('sessionsBadge');
+      
+      sessionsBadge.textContent = sessions.length;
+
+      if (sessions.length === 0) {
+        sessionsList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">💻</div>
+            <div class="empty-text">No active sessions</div>
+          </div>
+        `;
+        return;
+      }
+
+      sessionsList.innerHTML = sessions.map(session => `
+        <div class="card" data-session-id="${session.id}">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                ${escapeHtml(session.repository)}
+              </div>
+              <div class="card-repo">
+                <span class="branch-tag">⎇ ${escapeHtml(session.branch)}</span>
+              </div>
+            </div>
+            <div class="status status-${session.status}">
+              <span class="status-dot"></span>
+              ${session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+            </div>
+          </div>
+          <div class="card-activity">${escapeHtml(session.lastActivity)}</div>
+          <div class="card-meta">
+            <div class="card-users">
+              ${session.connectedUsers.map(user => `
+                <div class="avatar" title="${escapeHtml(user)}">${getInitials(user)}</div>
+              `).join('')}
+            </div>
+            <div class="card-time">${formatTime(session.lastActivityTime)}</div>
+          </div>
+          ${session.canJoin ? `
+            <div class="card-actions">
+              <button class="btn-jump" onclick="jumpIntoSession('${session.id}')">Jump In →</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Jump into session
+    async function jumpIntoSession(sessionId) {
+      await window.dashboard.jumpIntoSession(sessionId);
+    }
+
+    // New request button
+    document.getElementById('newRequestBtn').addEventListener('click', async () => {
+      await window.dashboard.newRequest();
+    });
+
+    // Load dashboard data
+    async function loadData() {
+      try {
+        const data = await window.dashboard.getData();
+        renderQueue(data.queue || []);
+        renderSessions(data.sessions || []);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      }
+    }
+
+    // Initial load
+    loadData();
+
+    // Refresh periodically
+    setInterval(loadData, 5000);
+  </script>
+</body>
+</html>

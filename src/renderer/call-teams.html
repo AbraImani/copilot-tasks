@@ -12,7 +12,7 @@
     }
     
     html, body {
-      background: #292929;
+      background: #464775;
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
       color: white;
       height: 100vh;
@@ -28,217 +28,157 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      background: linear-gradient(180deg, #292929 0%, #1f1f1f 100%);
-    }
-    
-    /* Teams Header */
-    .header {
-      display: flex;
       align-items: center;
-      padding: 12px 16px;
-      background: #5b5fc7;
+      justify-content: center;
+      /* Blurred purple gradient background like Teams */
+      background: linear-gradient(135deg, #464775 0%, #5b5fc7 30%, #7579c2 60%, #8b8fc9 100%);
+      position: relative;
     }
     
-    .teams-logo {
-      width: 20px;
-      height: 20px;
-      margin-right: 8px;
+    /* Blur overlay effect */
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse at 30% 20%, rgba(100, 100, 180, 0.4) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(80, 80, 150, 0.3) 0%, transparent 50%);
+      pointer-events: none;
     }
     
-    .header-text {
-      font-size: 13px;
-      font-weight: 600;
-    }
-    
-    /* Main Content */
     .content {
-      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    
-    .call-type {
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.7);
-      margin-bottom: 20px;
+      z-index: 1;
     }
     
     /* Avatar */
-    .avatar-container {
-      position: relative;
-      margin-bottom: 20px;
-    }
-    
     .avatar {
-      width: 100px;
-      height: 100px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #5b5fc7 0%, #7b7fda 100%);
+      background: linear-gradient(135deg, #6264a7 0%, #8b8fc9 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 42px;
-      font-weight: 600;
+      font-size: 32px;
       color: white;
-      text-transform: uppercase;
-    }
-    
-    .avatar-ring {
-      position: absolute;
-      top: -8px;
-      left: -8px;
-      right: -8px;
-      bottom: -8px;
-      border-radius: 50%;
-      border: 3px solid rgba(91, 95, 199, 0.5);
-      animation: ring-pulse 2s ease-in-out infinite;
-    }
-    
-    @keyframes ring-pulse {
-      0%, 100% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.1); opacity: 0.3; }
+      margin-bottom: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
     
     /* Caller Info */
     .caller-name {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 600;
-      margin-bottom: 4px;
-    }
-    
-    .caller-context {
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.6);
       margin-bottom: 8px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
     
     .call-status {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.5);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 400;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
     
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: #5b5fc7;
-      border-radius: 50%;
-      animation: blink 1s ease-in-out infinite;
-    }
-    
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-    
-    /* Action Buttons */
+    /* Action Buttons - 3 circular buttons */
     .actions {
       display: flex;
-      gap: 16px;
-      margin-top: auto;
-      padding: 24px;
+      gap: 20px;
+      margin-top: 40px;
       -webkit-app-region: no-drag;
     }
     
-    .btn {
-      flex: 1;
-      height: 44px;
-      border-radius: 6px;
+    .btn-round {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
       border: none;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      cursor: pointer;
       transition: all 0.15s ease;
+      font-size: 20px;
     }
     
-    .btn:hover {
-      filter: brightness(1.1);
+    .btn-round:hover {
+      transform: scale(1.1);
     }
     
-    .btn:active {
-      transform: scale(0.98);
+    .btn-round:active {
+      transform: scale(0.95);
+    }
+    
+    .btn-video {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      backdrop-filter: blur(10px);
+    }
+    
+    .btn-audio {
+      background: #5b5fc7;
+      color: white;
+      box-shadow: 0 4px 15px rgba(91, 95, 199, 0.5);
     }
     
     .btn-decline {
-      background: #c42b1c;
+      background: #c4314b;
       color: white;
+      box-shadow: 0 4px 15px rgba(196, 49, 75, 0.5);
     }
     
-    .btn-accept {
-      background: #5b5fc7;
-      color: white;
-    }
-    
-    .btn-accept-video {
-      background: #5b5fc7;
-      color: white;
-    }
-    
-    .btn-icon {
-      font-size: 18px;
+    /* SVG icons */
+    .btn-round svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <svg class="teams-logo" viewBox="0 0 24 24" fill="white">
-        <path d="M20.625 8.5h-6.25a.625.625 0 0 0-.625.625v6.25c0 .345.28.625.625.625h6.25c.345 0 .625-.28.625-.625v-6.25a.625.625 0 0 0-.625-.625zM17.5 6.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM12 7a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-.625 2h-7.75A.625.625 0 0 0 3 9.625v7.75c0 .345.28.625.625.625h7.75c.345 0 .625-.28.625-.625v-7.75A.625.625 0 0 0 11.375 9z"/>
-      </svg>
-      <span class="header-text">Microsoft Teams</span>
-    </div>
-    
     <div class="content">
-      <div class="call-type" id="callType">Incoming video call</div>
+      <div class="avatar" id="avatar">✦</div>
       
-      <div class="avatar-container">
-        <div class="avatar-ring"></div>
-        <div class="avatar" id="avatar">S</div>
-      </div>
-      
-      <div class="caller-name" id="callerName">Sarah Chen</div>
-      <div class="caller-context" id="callerContext">Engineering standup</div>
-      
-      <div class="call-status">
-        <span class="status-dot"></span>
-        <span>Calling...</span>
-      </div>
+      <div class="caller-name" id="callerName">Copilot</div>
+      <div class="call-status">is calling you</div>
     </div>
     
     <div class="actions">
-      <button class="btn btn-decline" id="btnDecline">
-        <span class="btn-icon">✕</span>
-        Decline
+      <!-- Video button -->
+      <button class="btn-round btn-video" id="btnVideo" title="Accept with video">
+        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
       </button>
-      <button class="btn btn-accept-video" id="btnAccept">
-        <span class="btn-icon">📹</span>
-        Accept
+      
+      <!-- Audio accept button -->
+      <button class="btn-round btn-audio" id="btnAccept" title="Accept with audio">
+        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+      </button>
+      
+      <!-- Decline button -->
+      <button class="btn-round btn-decline" id="btnDecline" title="Decline">
+        <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
       </button>
     </div>
   </div>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const callerName = urlParams.get('name') || 'Unknown';
-    const callerContext = urlParams.get('context') || '';
-    const callType = urlParams.get('type') || 'video';
+    const callerName = urlParams.get('name') || 'Copilot';
     
     document.getElementById('callerName').textContent = callerName;
-    document.getElementById('callerContext').textContent = callerContext;
-    document.getElementById('avatar').textContent = callerName.charAt(0).toUpperCase();
-    document.getElementById('callType').textContent = `Incoming ${callType} call`;
     
-    if (callType === 'audio') {
-      document.getElementById('btnAccept').innerHTML = '<span class="btn-icon">📞</span> Accept';
+    // Use sparkle for Copilot, otherwise first letter
+    if (callerName.toLowerCase() === 'copilot') {
+      document.getElementById('avatar').textContent = '✦';
+    } else {
+      document.getElementById('avatar').textContent = callerName.charAt(0).toUpperCase();
     }
     
     document.getElementById('btnDecline').addEventListener('click', () => {
@@ -249,19 +189,22 @@
       }
     });
     
-    document.getElementById('btnAccept').addEventListener('click', () => {
+    const acceptCall = () => {
       if (window.electronAPI) {
         window.electronAPI.acceptSimulatedCall('teams', callerName);
       } else {
         console.log(JSON.stringify({ accepted: true, platform: 'teams', callerName }));
         window.close();
       }
-    });
+    };
+    
+    document.getElementById('btnAccept').addEventListener('click', acceptCall);
+    document.getElementById('btnVideo').addEventListener('click', acceptCall);
     
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.key === 'a' || e.key === 'A' || e.key === 'Enter') {
-        document.getElementById('btnAccept').click();
+        acceptCall();
       } else if (e.key === 'd' || e.key === 'D' || e.key === 'Escape') {
         document.getElementById('btnDecline').click();
       }
