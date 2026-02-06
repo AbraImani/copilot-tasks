@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('chat', {
     ipcRenderer.on('chat-event', (event, data) => callback(data));
   },
   goBack: () => ipcRenderer.invoke('chat-go-back'),
+  pickFolder: () => ipcRenderer.invoke('chat-pick-folder'),
 });

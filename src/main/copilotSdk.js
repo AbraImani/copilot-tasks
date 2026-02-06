@@ -6,6 +6,9 @@
 
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 const execAsync = promisify(exec);
 
 let CopilotClient;
@@ -19,9 +22,21 @@ async function loadSDK() {
   return CopilotClient;
 }
 
-/** @type {import('@github/copilot-sdk').CopilotClient | null} */
-let client = null;
-let clientStarting = false;
+/**
+ * Read the user's CLI config to maintain parity with their CLI settings
+ */
+function readCliConfig() {
+  try {
+    const configPath = path.join(os.homedir(), '.copilot', 'config.json');
+    const raw = fs.readFileSync(configPath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+/** @type {Map<string, import('@github/copilot-sdk').CopilotClient>} */
+const clientsByWorkspace = new Map();
 let lastSessionsFetch = 0;
 let cachedSessions = [];
 const CACHE_TTL_MS = 5000; // Cache sessions for 5 seconds
@@ -33,39 +48,27 @@ const activeSessions = new Map();
 const sessionEventHandlers = new Map();
 
 /**
- * Get or create the Copilot client
+ * Get or create a Copilot client for a specific workspace directory.
+ * The default (no cwd) client is keyed by empty string.
+ * @param {string} [cwd]
  * @returns {Promise<import('@github/copilot-sdk').CopilotClient>}
  */
-async function getClient() {
-  if (client) {
-    return client;
+async function getClient(cwd) {
+  const key = cwd || '';
+
+  if (clientsByWorkspace.has(key)) {
+    return clientsByWorkspace.get(key);
   }
 
-  if (clientStarting) {
-    // Wait for client to be ready
-    while (clientStarting) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    if (client) return client;
-  }
+  const ClientClass = await loadSDK();
+  const opts = { autoStart: true, autoRestart: true };
+  if (cwd) opts.cwd = cwd;
 
-  clientStarting = true;
-  try {
-    const ClientClass = await loadSDK();
-    client = new ClientClass({
-      autoStart: true,
-      autoRestart: true,
-    });
-    await client.start();
-    console.log('✅ Copilot SDK client connected');
-    return client;
-  } catch (error) {
-    console.error('❌ Failed to start Copilot SDK client:', error.message);
-    client = null;
-    throw error;
-  } finally {
-    clientStarting = false;
-  }
+  const newClient = new ClientClass(opts);
+  await newClient.start();
+  clientsByWorkspace.set(key, newClient);
+  console.log(`✅ Copilot SDK client connected (cwd: ${cwd || 'default'})`);
+  return newClient;
 }
 
 /**
@@ -162,14 +165,13 @@ async function resumeSession(sessionId) {
  * Create a new empty session for interactive chat
  * @returns {Promise<{success: boolean, sessionId?: string, error?: string}>}
  */
-async function createSession() {
+async function createSession(workspacePath) {
   try {
-    const copilotClient = await getClient();
-    const session = await copilotClient.createSession({
-      model: 'claude-sonnet-4',
-    });
+    const cwd = workspacePath || os.homedir();
+    const copilotClient = await getClient(cwd);
+    const session = await copilotClient.createSession({});
 
-    console.log(`✅ Created new session: ${session.sessionId}`);
+    console.log(`✅ Created new session: ${session.sessionId} (cwd: ${cwd})`);
     
     // Store in active sessions
     activeSessions.set(session.sessionId, session);
@@ -177,6 +179,7 @@ async function createSession() {
     return {
       success: true,
       sessionId: session.sessionId,
+      workspacePath: cwd,
     };
   } catch (error) {
     console.error('❌ Failed to create session:', error.message);
@@ -192,12 +195,11 @@ async function createSession() {
  * @param {string} prompt - The task description
  * @returns {Promise<{success: boolean, sessionId?: string, error?: string}>}
  */
-async function createTaskSession(prompt) {
+async function createTaskSession(prompt, workspacePath) {
   try {
-    const copilotClient = await getClient();
-    const session = await copilotClient.createSession({
-      model: 'claude-sonnet-4',
-    });
+    const cwd = workspacePath || os.homedir();
+    const copilotClient = await getClient(cwd);
+    const session = await copilotClient.createSession({});
 
     // Send the initial prompt
     await session.send({ prompt });
@@ -222,15 +224,15 @@ async function createTaskSession(prompt) {
  * Stop the client connection (call on app quit)
  */
 async function stopClient() {
-  if (client) {
+  for (const [key, c] of clientsByWorkspace) {
     try {
-      await client.stop();
-      console.log('✅ Copilot SDK client stopped');
+      await c.stop();
+      console.log(`✅ Copilot SDK client stopped (cwd: ${key || 'default'})`);
     } catch (error) {
-      console.error('❌ Error stopping Copilot SDK client:', error.message);
+      console.error(`❌ Error stopping Copilot SDK client (${key || 'default'}):`, error.message);
     }
-    client = null;
   }
+  clientsByWorkspace.clear();
 }
 
 /**
@@ -343,18 +345,26 @@ async function listSessionsWithRunning() {
       runningBySessionId.delete(session.id); // Mark as matched
       return {
         ...session,
+        source: 'both',
         status: 'running',
         pid: runningProc.pid,
         tty: runningProc.tty,
         cwd: runningProc.cwd || session.repository,
-        canJoin: true, // Can focus the window
+        canJoin: true,
+        canChat: true,
+        canOpenTerminal: true,
         connectedUsers: ['You (active)'],
       };
     }
-    return session;
+    return {
+      ...session,
+      source: 'sdk',
+      canChat: true,
+      canOpenTerminal: true,
+    };
   });
   
-  // Add running processes without stored sessions (new sessions)
+  // Add running processes without stored sessions (process-only)
   for (const proc of runningWithoutSession) {
     const repoName = proc.cwd ? proc.cwd.split('/').pop() : 'Active Session';
     mergedSessions.unshift({
@@ -363,13 +373,16 @@ async function listSessionsWithRunning() {
       branch: 'main',
       lastActivity: 'Running in terminal',
       lastActivityTime: Date.now(),
+      source: 'process',
       status: 'running',
       pid: proc.pid,
       tty: proc.tty,
       cwd: proc.cwd,
       connectedUsers: ['You (active)'],
       canJoin: true,
-      isRunningOnly: true, // No stored session yet
+      canChat: false,
+      canOpenTerminal: false,
+      isRunningOnly: true,
     });
   }
   
@@ -391,43 +404,42 @@ async function listSessionsWithRunning() {
  */
 async function joinSession(sessionId, eventHandler) {
   try {
-    // Check if we already have this session active
-    if (activeSessions.has(sessionId)) {
-      const session = activeSessions.get(sessionId);
-      // Add new event handler
-      if (eventHandler) {
-        const handlers = sessionEventHandlers.get(sessionId) || [];
-        handlers.push(eventHandler);
-        sessionEventHandlers.set(sessionId, handlers);
-      }
-      return {
-        success: true,
-        session: { sessionId: session.sessionId },
-      };
+    // Check if we need to subscribe to events (not done yet for this session)
+    const needsSubscription = !sessionEventHandlers.has(sessionId);
+    
+    let session;
+    if (!activeSessions.has(sessionId)) {
+      const copilotClient = await getClient();
+      session = await copilotClient.resumeSession(sessionId);
+      activeSessions.set(sessionId, session);
+    } else {
+      session = activeSessions.get(sessionId);
     }
-
-    const copilotClient = await getClient();
-    const session = await copilotClient.resumeSession(sessionId);
     
-    // Store the session
-    activeSessions.set(sessionId, session);
+    if (needsSubscription) {
+      sessionEventHandlers.set(sessionId, []);
+    }
     
-    // Set up event handler
+    // Add event handler
     if (eventHandler) {
-      sessionEventHandlers.set(sessionId, [eventHandler]);
+      const handlers = sessionEventHandlers.get(sessionId) || [];
+      handlers.push(eventHandler);
+      sessionEventHandlers.set(sessionId, handlers);
     }
     
-    // Subscribe to events
-    session.on((event) => {
-      const handlers = sessionEventHandlers.get(sessionId) || [];
-      for (const handler of handlers) {
-        try {
-          handler(event);
-        } catch (err) {
-          console.error('Error in session event handler:', err);
+    // Subscribe to events if this is a new subscription
+    if (needsSubscription) {
+      session.on((event) => {
+        const handlers = sessionEventHandlers.get(sessionId) || [];
+        for (const handler of handlers) {
+          try {
+            handler(event);
+          } catch (err) {
+            console.error('Error in session event handler:', err);
+          }
         }
-      }
-    });
+      });
+    }
     
     console.log(`✅ Joined session: ${sessionId}`);
     
@@ -513,6 +525,51 @@ function leaveSession(sessionId) {
   console.log(`👋 Left session: ${sessionId}`);
 }
 
+/**
+ * Open a session in a new terminal window via the CLI
+ * @param {string} sessionId
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+async function openInTerminal(sessionId) {
+  try {
+    // Use the copilot CLI --resume flag in a new terminal window
+    const cmd = `copilot --resume ${sessionId}`;
+
+    if (process.platform === 'darwin') {
+      // Try Conduit first, fall back to Terminal.app
+      try {
+        await execAsync(`open -a Conduit`);
+        // Give Conduit a moment to focus, then use osascript to type the command
+        const script = `
+          tell application "System Events"
+            tell process "Conduit"
+              delay 0.3
+              keystroke "t" using command down
+              delay 0.3
+              keystroke "${cmd}"
+              key code 36
+            end tell
+          end tell
+        `;
+        await execAsync(`osascript -e '${script}'`);
+      } catch {
+        // Fall back to Terminal.app
+        const script = `tell application "Terminal" to do script "${cmd}"`;
+        await execAsync(`osascript -e '${script}'`);
+      }
+    } else {
+      // Linux / Windows fallback
+      await execAsync(`x-terminal-emulator -e ${cmd}`);
+    }
+
+    console.log(`✅ Opened session in terminal: ${sessionId}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`❌ Failed to open session in terminal:`, error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 module.exports = {
   listSessions,
   listSessionsWithRunning,
@@ -521,6 +578,7 @@ module.exports = {
   createTaskSession,
   stopClient,
   focusConduitWindow,
+  openInTerminal,
   discoverRunningProcesses,
   joinSession,
   sendToSession,

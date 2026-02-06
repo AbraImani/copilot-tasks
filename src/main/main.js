@@ -14,7 +14,7 @@ const { Tray, Menu, nativeImage, BrowserWindow, ipcMain, session, systemPreferen
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { registerVoiceHandlers, closeActiveSession } = require('./elevenLabs');
-const { listSessionsWithRunning, resumeSession, createTaskSession, stopClient, focusConduitWindow, joinSession, sendToSession, getSessionMessages, leaveSession } = require('./copilotSdk');
+const { listSessionsWithRunning, resumeSession, createTaskSession, stopClient, focusConduitWindow, openInTerminal, joinSession, sendToSession, getSessionMessages, leaveSession } = require('./copilotSdk');
 
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -87,7 +87,7 @@ let dashboardWindow = null;
 /** @type {Electron.BrowserWindow | null} */
 let chatWindow = null;
 
-/** @type {{ sessionId: string, title?: string, subtitle?: string } | null} */
+/** @type {{ sessionId: string, title?: string, subtitle?: string, cwd?: string } | null} */
 let currentChatSession = null;
 
 /** @type {import('express').Application} */
@@ -356,14 +356,14 @@ function createDashboardWindow() {
 /**
  * Create and show the chat window for a session
  */
-function createChatWindow(sessionId, title, subtitle) {
+function createChatWindow(sessionId, title, subtitle, cwd) {
   // Close any existing chat window
   if (chatWindow && !chatWindow.isDestroyed()) {
     chatWindow.close();
   }
 
   // Store current session info
-  currentChatSession = { sessionId, title, subtitle };
+  currentChatSession = { sessionId, title, subtitle, cwd };
 
   const { screen } = require('electron');
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -628,6 +628,27 @@ ipcMain.handle('chat-go-back', async () => {
   return { success: true };
 });
 
+ipcMain.handle('chat-pick-folder', async () => {
+  const { dialog } = require('electron');
+  const result = await dialog.showOpenDialog(chatWindow, {
+    properties: ['openDirectory'],
+    defaultPath: currentChatSession?.cwd || require('os').homedir(),
+    title: 'Choose workspace directory',
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return { canceled: true };
+  }
+  const chosen = result.filePaths[0];
+  if (currentChatSession) {
+    currentChatSession.cwd = chosen;
+  }
+  return { canceled: false, path: chosen };
+});
+
+ipcMain.handle('open-in-terminal', async (event, sessionId) => {
+  return await openInTerminal(sessionId);
+});
+
 // New chat request - opens chat interface with a new session
 ipcMain.handle('new-chat-request', async () => {
   console.log('💬 New chat request initiated from dashboard');
@@ -638,16 +659,18 @@ ipcMain.handle('new-chat-request', async () => {
   }
   
   try {
-    // Create a new session
+    const homedir = require('os').homedir();
+    // Create a new session with home dir as default workspace
     const { createSession } = require('./copilotSdk');
-    const result = await createSession();
+    const result = await createSession(homedir);
     
     if (result.success && result.sessionId) {
       // Open the chat window for this new session
       createChatWindow(
         result.sessionId,
         'New Request',
-        'What would you like help with?'
+        'What would you like help with?',
+        homedir
       );
       return { success: true, sessionId: result.sessionId };
     } else {
