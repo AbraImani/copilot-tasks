@@ -186,20 +186,56 @@
     }
     
     /* Active Call State */
+    .call-active .avatar-container {
+      margin-bottom: 8px;
+    }
+    
+    .call-active .avatar {
+      width: 72px;
+      height: 72px;
+    }
+    
+    .call-active .avatar img {
+      width: 44px;
+      height: 44px;
+    }
+    
     .call-active .avatar-ring {
       border-color: rgba(52, 199, 89, 0.8);
       animation: none;
     }
     
+    .call-active .caller-info {
+      margin-bottom: 4px;
+    }
+    
+    .call-active .caller-name {
+      font-size: 20px;
+    }
+    
+    .topic-card {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    
+    .topic-card.hidden {
+      display: none;
+    }
+    
     .transcript {
       width: 100%;
+      flex: 1;
       background: rgba(0, 0, 0, 0.3);
       border-radius: 12px;
       padding: 12px;
-      max-height: 140px;
+      min-height: 120px;
       overflow-y: auto;
       margin-bottom: 12px;
-      font-size: 13px;
+      font-size: 14px;
       border: 1px solid rgba(255, 255, 255, 0.06);
     }
     
@@ -356,9 +392,9 @@
       <div class="call-duration" id="call-duration">00:00</div>
     </div>
     
-    <div class="question-card" style="flex: 0; margin-bottom: 8px;">
+    <div class="topic-card" id="topic-card">
       <div class="question-label">Topic</div>
-      <div class="question-text" id="active-topic">Loading...</div>
+      <div class="question-text" id="active-topic"></div>
     </div>
     
     <div class="transcript" id="transcript"></div>
@@ -397,7 +433,15 @@
     window.copilotTasks.onCallStarted(async (callId) => {
       document.getElementById('incoming-call').classList.add('hidden');
       document.getElementById('active-call').classList.remove('hidden');
-      document.getElementById('active-topic').textContent = currentCall.topic;
+      
+      // Only show topic card if topic is provided
+      const topicCard = document.getElementById('topic-card');
+      if (currentCall.topic && currentCall.topic.trim()) {
+        document.getElementById('active-topic').textContent = currentCall.topic;
+        topicCard.classList.remove('hidden');
+      } else {
+        topicCard.classList.add('hidden');
+      }
       
       callStartTime = Date.now();
       durationInterval = setInterval(updateDuration, 1000);

@@ -14,7 +14,7 @@ const { Tray, Menu, nativeImage, BrowserWindow, ipcMain, session, systemPreferen
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { registerVoiceHandlers, closeActiveSession } = require('./elevenLabs');
-const { listSessions, resumeSession, createTaskSession, stopClient } = require('./copilotSdk');
+const { listSessionsWithRunning, resumeSession, createTaskSession, stopClient, focusConduitWindow } = require('./copilotSdk');
 
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -478,10 +478,10 @@ ipcMain.handle('get-queue', async () => {
 
 // Dashboard IPC handlers
 ipcMain.handle('get-dashboard-data', async () => {
-  // Fetch real sessions from Copilot SDK
+  // Fetch real sessions from Copilot SDK (merged with running processes)
   let sessions = [];
   try {
-    sessions = await listSessions();
+    sessions = await listSessionsWithRunning();
   } catch (error) {
     console.error('Failed to fetch sessions:', error.message);
   }
@@ -493,26 +493,31 @@ ipcMain.handle('get-dashboard-data', async () => {
   };
 });
 
-ipcMain.handle('jump-into-session', async (event, sessionId) => {
-  console.log(`🚀 Jumping into session: ${sessionId}`);
+ipcMain.handle('jump-into-session', async (event, sessionId, tty) => {
+  console.log(`🚀 Jumping into session: ${sessionId}, TTY: ${tty}`);
   
   // Close the dashboard
   if (dashboardWindow && !dashboardWindow.isDestroyed()) {
     dashboardWindow.close();
   }
   
-  // Resume the session via SDK
+  // If we have a TTY, focus the Conduit window directly
+  if (tty) {
+    const result = await focusConduitWindow(tty);
+    return { success: result.success, focused: true };
+  }
+  
+  // Otherwise, resume the session via SDK
   const result = await resumeSession(sessionId);
   
   if (result.success && result.workspacePath) {
     // Open a new terminal with copilot CLI in that session
     const copilotCmd = `copilot --resume ${sessionId}`;
     
-    // On macOS, open Terminal with the command
+    // On macOS, open Conduit with the command
     if (process.platform === 'darwin') {
-      const script = `tell application "Terminal"
+      const script = `tell application "Conduit"
         activate
-        do script "${copilotCmd}"
       end tell`;
       require('child_process').exec(`osascript -e '${script}'`);
     } else {

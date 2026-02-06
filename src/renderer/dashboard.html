@@ -12,9 +12,9 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
-      background: transparent;
-      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
       height: 100vh;
       overflow: hidden;
       user-select: none;
@@ -25,12 +25,9 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      padding: 20px;
-      background: rgba(30, 30, 30, 0.75);
-      backdrop-filter: blur(40px) saturate(180%);
-      -webkit-backdrop-filter: blur(40px) saturate(180%);
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+      border: 1px solid #30363d;
+      border-radius: 12px;
     }
 
     /* Header */
@@ -38,75 +35,87 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      padding: 16px;
+      background: #21262d;
+      border-bottom: 1px solid #30363d;
+      border-radius: 12px 12px 0 0;
       -webkit-app-region: drag;
     }
 
     .header-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
-    .logo {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
+    .copilot-logo {
+      width: 24px;
+      height: 24px;
+      color: #2f81f7;
     }
 
     .title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
-      letter-spacing: -0.3px;
+      color: #e6edf3;
+    }
+
+    .header-badge {
+      margin-left: 6px;
+      padding: 2px 8px;
+      background: rgba(47, 129, 247, 0.15);
+      border-radius: 12px;
+      font-size: 11px;
+      color: #2f81f7;
+      font-weight: 500;
     }
 
     .new-request-btn {
       -webkit-app-region: no-drag;
-      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-      border: none;
+      background: #238636;
+      border: 1px solid #238636;
       color: white;
-      padding: 10px 16px;
-      border-radius: 10px;
+      padding: 8px 14px;
+      border-radius: 6px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+      transition: all 0.15s ease;
     }
 
     .new-request-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+      background: #2ea043;
     }
 
     .new-request-btn:active {
-      transform: translateY(0);
+      transform: scale(0.98);
+    }
+
+    .new-request-btn svg {
+      width: 14px;
+      height: 14px;
     }
 
     /* Sections */
     .sections {
       flex: 1;
       overflow-y: auto;
+      padding: 16px;
       -webkit-app-region: no-drag;
     }
 
     .section {
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .section-title {
@@ -114,31 +123,31 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: rgba(255, 255, 255, 0.5);
+      color: #8b949e;
     }
 
     .section-badge {
-      background: rgba(255, 255, 255, 0.1);
+      background: #30363d;
       padding: 2px 8px;
       border-radius: 10px;
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.6);
+      color: #8b949e;
     }
 
     /* Cards */
     .card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
-      transition: all 0.2s ease;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      transition: all 0.15s ease;
       cursor: pointer;
     }
 
     .card:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.12);
+      background: #262c36;
+      border-color: #3d444d;
     }
 
     .card-header {
@@ -151,7 +160,7 @@
     .card-title {
       font-size: 14px;
       font-weight: 600;
-      color: #ffffff;
+      color: #e6edf3;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -159,13 +168,13 @@
 
     .card-repo {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.5);
-      margin-top: 2px;
+      color: #8b949e;
+      margin-top: 4px;
     }
 
     .card-activity {
       font-size: 13px;
-      color: rgba(255, 255, 255, 0.8);
+      color: #c9d1d9;
       margin-bottom: 10px;
       line-height: 1.4;
     }
@@ -179,21 +188,21 @@
     .card-users {
       display: flex;
       align-items: center;
-      gap: 6px;
     }
 
     .avatar {
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      background: #30363d;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 10px;
       font-weight: 600;
-      border: 2px solid rgba(30, 30, 30, 0.8);
-      margin-left: -8px;
+      color: #8b949e;
+      border: 2px solid #161b22;
+      margin-left: -6px;
     }
 
     .avatar:first-child {
@@ -202,55 +211,61 @@
 
     .card-time {
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.4);
+      color: #8b949e;
     }
 
     .card-actions {
       display: flex;
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .btn-jump {
-      background: rgba(124, 58, 237, 0.2);
-      border: 1px solid rgba(124, 58, 237, 0.3);
-      color: #a855f7;
-      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid #30363d;
+      color: #58a6ff;
+      padding: 5px 12px;
       border-radius: 6px;
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
 
     .btn-jump:hover {
-      background: rgba(124, 58, 237, 0.3);
+      background: rgba(88, 166, 255, 0.1);
+      border-color: #58a6ff;
     }
 
     /* Status indicators */
     .status {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 3px 8px;
-      border-radius: 6px;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 12px;
       font-size: 11px;
       font-weight: 500;
     }
 
+    .status-running {
+      background: rgba(47, 129, 247, 0.15);
+      color: #58a6ff;
+    }
+
     .status-active {
-      background: rgba(34, 197, 94, 0.15);
-      color: #4ade80;
+      background: rgba(35, 134, 54, 0.15);
+      color: #3fb950;
     }
 
     .status-idle {
-      background: rgba(234, 179, 8, 0.15);
-      color: #facc15;
+      background: rgba(210, 153, 34, 0.15);
+      color: #d29922;
     }
 
     .status-disconnected {
-      background: rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.5);
+      background: rgba(139, 148, 158, 0.15);
+      color: #8b949e;
     }
 
     .status-dot {
@@ -260,13 +275,17 @@
       background: currentColor;
     }
 
+    .status-running .status-dot {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
     .status-active .status-dot {
-      animation: pulse 2s infinite;
+      animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      50% { opacity: 0.4; }
     }
 
     /* Queue card */
@@ -274,18 +293,24 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 14px;
+      padding: 12px;
     }
 
     .queue-icon {
       width: 36px;
       height: 36px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+      border-radius: 8px;
+      background: rgba(47, 129, 247, 0.15);
+      border: 1px solid rgba(47, 129, 247, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      color: #58a6ff;
+    }
+
+    .queue-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
     .queue-info {
@@ -295,30 +320,35 @@
     .queue-topic {
       font-size: 14px;
       font-weight: 500;
-      color: #ffffff;
+      color: #e6edf3;
     }
 
     .queue-context {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.5);
+      color: #8b949e;
       margin-top: 2px;
     }
 
     /* Empty state */
     .empty-state {
       text-align: center;
-      padding: 24px;
-      color: rgba(255, 255, 255, 0.4);
+      padding: 32px 16px;
+      color: #8b949e;
     }
 
     .empty-icon {
-      font-size: 32px;
-      margin-bottom: 8px;
-      opacity: 0.5;
+      margin-bottom: 12px;
+    }
+
+    .empty-icon svg {
+      width: 40px;
+      height: 40px;
+      color: #30363d;
     }
 
     .empty-text {
       font-size: 13px;
+      color: #8b949e;
     }
 
     /* Branch tag */
@@ -326,17 +356,17 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(47, 129, 247, 0.1);
       padding: 2px 8px;
       border-radius: 4px;
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.6);
-      font-family: 'SF Mono', Monaco, monospace;
+      color: #58a6ff;
+      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
     }
 
     /* Scrollbar */
     .sections::-webkit-scrollbar {
-      width: 6px;
+      width: 8px;
     }
 
     .sections::-webkit-scrollbar-track {
@@ -344,12 +374,12 @@
     }
 
     .sections::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
+      background: #30363d;
+      border-radius: 4px;
     }
 
     .sections::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: #3d444d;
     }
   </style>
 </head>
@@ -357,11 +387,19 @@
   <div class="container">
     <div class="header">
       <div class="header-left">
-        <div class="logo">✦</div>
+        <svg class="copilot-logo" viewBox="0 0 32 32" fill="currentColor">
+          <rect x="4" y="10" width="24" height="16" rx="4" ry="4"/>
+          <circle cx="12" cy="18" r="3" fill="#0d1117"/>
+          <circle cx="20" cy="18" r="3" fill="#0d1117"/>
+        </svg>
         <span class="title">Copilot Tasks</span>
+        <span class="header-badge">Dashboard</span>
       </div>
       <button class="new-request-btn" id="newRequestBtn">
-        <span>✦</span> New Request
+        <svg viewBox="0 0 16 16" fill="currentColor">
+          <path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 110 1.5H8.5v4.25a.75.75 0 11-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/>
+        </svg>
+        New Request
       </button>
     </div>
 
@@ -374,7 +412,11 @@
         </div>
         <div id="queueList">
           <div class="empty-state">
-            <div class="empty-icon">📞</div>
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
+              </svg>
+            </div>
             <div class="empty-text">No pending calls</div>
           </div>
         </div>
@@ -388,7 +430,11 @@
         </div>
         <div id="sessionsList">
           <div class="empty-state">
-            <div class="empty-icon">💻</div>
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/>
+              </svg>
+            </div>
             <div class="empty-text">No active sessions</div>
           </div>
         </div>
@@ -426,7 +472,11 @@
       if (queue.length === 0) {
         queueList.innerHTML = `
           <div class="empty-state">
-            <div class="empty-icon">📞</div>
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
+              </svg>
+            </div>
             <div class="empty-text">No pending calls</div>
           </div>
         `;
@@ -435,7 +485,13 @@
 
       queueList.innerHTML = queue.map(call => `
         <div class="card queue-card" data-call-id="${call.callId}">
-          <div class="queue-icon">📞</div>
+          <div class="queue-icon">
+            <svg viewBox="0 0 32 32" fill="currentColor">
+              <rect x="4" y="10" width="24" height="16" rx="4" ry="4"/>
+              <circle cx="12" cy="18" r="3" fill="#0d1117"/>
+              <circle cx="20" cy="18" r="3" fill="#0d1117"/>
+            </svg>
+          </div>
           <div class="queue-info">
             <div class="queue-topic">${escapeHtml(call.topic)}</div>
             <div class="queue-context">${escapeHtml(call.context || 'Waiting...')}</div>
@@ -455,7 +511,11 @@
       if (sessions.length === 0) {
         sessionsList.innerHTML = `
           <div class="empty-state">
-            <div class="empty-icon">💻</div>
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/>
+              </svg>
+            </div>
             <div class="empty-text">No active sessions</div>
           </div>
         `;
@@ -463,14 +523,14 @@
       }
 
       sessionsList.innerHTML = sessions.map(session => `
-        <div class="card" data-session-id="${session.id}">
+        <div class="card" data-session-id="${session.id}" data-tty="${session.tty || ''}">
           <div class="card-header">
             <div>
               <div class="card-title">
-                ${escapeHtml(session.repository)}
+                ${escapeHtml(session.cwd ? session.cwd.split('/').pop() : session.repository)}
               </div>
               <div class="card-repo">
-                <span class="branch-tag">⎇ ${escapeHtml(session.branch)}</span>
+                ${session.cwd ? `<span class="branch-tag" title="${escapeHtml(session.cwd)}">${escapeHtml(session.cwd)}</span>` : `<span class="branch-tag"><svg style="width:10px;height:10px;margin-right:3px" viewBox="0 0 16 16" fill="currentColor"><path d="M11.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122V6A2.5 2.5 0 0110 8.5H6a1 1 0 00-1 1v1.128a2.251 2.251 0 11-1.5 0V5.372a2.25 2.25 0 111.5 0v1.836A2.492 2.492 0 016 7h4a1 1 0 001-1v-.628A2.25 2.25 0 019.5 3.25zM4.25 12a.75.75 0 100 1.5.75.75 0 000-1.5zM3.5 3.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0z"/></svg>${escapeHtml(session.branch)}</span>`}
               </div>
             </div>
             <div class="status status-${session.status}">
@@ -489,7 +549,7 @@
           </div>
           ${session.canJoin ? `
             <div class="card-actions">
-              <button class="btn-jump" onclick="jumpIntoSession('${session.id}')">Jump In →</button>
+              <button class="btn-jump" onclick="jumpIntoSession('${session.id}', '${session.tty || ''}')">${session.status === 'running' ? 'Focus →' : 'Jump In →'}</button>
             </div>
           ` : ''}
         </div>
@@ -504,8 +564,8 @@
     }
 
     // Jump into session
-    async function jumpIntoSession(sessionId) {
-      await window.dashboard.jumpIntoSession(sessionId);
+    async function jumpIntoSession(sessionId, tty) {
+      await window.dashboard.jumpIntoSession(sessionId, tty || null);
     }
 
     // New request button
