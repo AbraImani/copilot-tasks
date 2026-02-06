@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copilot Chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+      border: 1px solid #30363d;
+      border-radius: 12px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #21262d;
+      border-bottom: 1px solid #30363d;
+      border-radius: 12px 12px 0 0;
+      -webkit-app-region: drag;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .back-btn {
+      -webkit-app-region: no-drag;
+      background: transparent;
+      border: none;
+      color: #8b949e;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .back-btn:hover {
+      background: #30363d;
+      color: #e6edf3;
+    }
+
+    .back-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .copilot-logo {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+
+    .copilot-logo-small {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+    }
+
+    .copilot-logo-large {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+    }
+
+    .header-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e6edf3;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: #8b949e;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(35, 134, 54, 0.15);
+      border-radius: 12px;
+      font-size: 11px;
+      color: #3fb950;
+    }
+
+    .status-indicator.thinking {
+      background: rgba(210, 153, 34, 0.15);
+      color: #d29922;
+    }
+
+    .status-indicator.error {
+      background: rgba(248, 81, 73, 0.15);
+      color: #f85149;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Messages Area */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      max-width: 100%;
+    }
+
+    .message-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #30363d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .message-avatar.user {
+      background: #238636;
+    }
+
+    .message-avatar.assistant {
+      background: transparent;
+    }
+
+    .message-avatar svg {
+      width: 16px;
+      height: 16px;
+      color: white;
+    }
+
+    .message-avatar img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+
+    .message-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .message-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .message-author {
+      font-size: 12px;
+      font-weight: 600;
+      color: #e6edf3;
+    }
+
+    .message-time {
+      font-size: 10px;
+      color: #8b949e;
+    }
+
+    .message-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message-text code {
+      background: #30363d;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+      font-size: 13px;
+    }
+
+    .message-text pre {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      margin: 8px 0;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+      font-size: 13px;
+    }
+
+    /* Tool execution */
+    .tool-execution {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin: 8px 0;
+      font-size: 12px;
+    }
+
+    .tool-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #8b949e;
+    }
+
+    .tool-header svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .tool-name {
+      color: #58a6ff;
+      font-weight: 500;
+    }
+
+    .tool-status {
+      margin-left: auto;
+      font-size: 11px;
+    }
+
+    .tool-status.running {
+      color: #d29922;
+    }
+
+    .tool-status.completed {
+      color: #3fb950;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 8px 0;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #8b949e;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-4px); }
+    }
+
+    /* Input Area */
+    .input-area {
+      padding: 12px 16px;
+      background: #21262d;
+      border-top: 1px solid #30363d;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 8px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 8px 12px;
+      transition: border-color 0.15s ease;
+    }
+
+    .input-container:focus-within {
+      border-color: #58a6ff;
+    }
+
+    .input-container textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e6edf3;
+      font-family: inherit;
+      font-size: 14px;
+      resize: none;
+      min-height: 20px;
+      max-height: 120px;
+    }
+
+    .input-container textarea::placeholder {
+      color: #8b949e;
+    }
+
+    .send-btn {
+      background: #238636;
+      border: none;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover:not(:disabled) {
+      background: #2ea043;
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .send-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Scrollbar */
+    .messages::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 4px;
+    }
+
+    .messages::-webkit-scrollbar-thumb:hover {
+      background: #3d444d;
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #8b949e;
+      text-align: center;
+      padding: 32px;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      color: #30363d;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e6edf3;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 13px;
+      max-width: 280px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <button class="back-btn" id="backBtn" title="Back to Dashboard">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path fill-rule="evenodd" d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"/>
+          </svg>
+        </button>
+        <img class="copilot-logo" src="../../assets/logo-128.png" alt="Copilot">
+        <div class="header-info">
+          <span class="header-title" id="sessionTitle">Session</span>
+          <span class="header-subtitle" id="sessionSubtitle">Loading...</span>
+        </div>
+      </div>
+      <div class="status-indicator" id="statusIndicator">
+        <span class="status-dot"></span>
+        <span id="statusText">Connected</span>
+      </div>
+    </div>
+
+    <div class="messages" id="messagesContainer">
+      <div class="empty-state" id="emptyState">
+        <img class="copilot-logo-large" src="../../assets/logo-128.png" alt="Copilot">
+        <div class="empty-state-title">Ready to chat</div>
+        <div class="empty-state-text">Send a message to start the conversation with Copilot.</div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-container">
+        <textarea 
+          id="messageInput" 
+          placeholder="Ask Copilot something..." 
+          rows="1"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" title="Send message">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path d="M.989 8 .064 2.68a1.342 1.342 0 0 1 1.85-1.462l13.402 5.744a1.13 1.13 0 0 1 0 2.076L1.913 14.782a1.343 1.343 0 0 1-1.85-1.463L.99 8Zm.603-5.288L2.38 7.25h4.87a.75.75 0 0 1 0 1.5H2.38l-.788 4.538L13.929 8Z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const messagesContainer = document.getElementById('messagesContainer');
+    const emptyState = document.getElementById('emptyState');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const sessionTitle = document.getElementById('sessionTitle');
+    const sessionSubtitle = document.getElementById('sessionSubtitle');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusText = document.getElementById('statusText');
+    const backBtn = document.getElementById('backBtn');
+
+    let messages = [];
+    let isThinking = false;
+    let currentSessionId = null;
+
+    // Format time
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Render messages
+    function renderMessages() {
+      if (messages.length === 0) {
+        emptyState.style.display = 'flex';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      
+      const html = messages.map(msg => {
+        if (msg.type === 'tool') {
+          return `
+            <div class="message">
+              <div class="message-avatar assistant">
+                <img class="copilot-logo-small" src="../../assets/logo-128.png" alt="Copilot">
+              </div>
+              <div class="message-content">
+                <div class="tool-execution">
+                  <div class="tool-header">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                      <path fill-rule="evenodd" d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61zM12.184 2.49a.25.25 0 00-.354 0L3.22 11.1a.25.25 0 00-.065.108l-.665 2.329 2.33-.665a.25.25 0 00.107-.065l8.61-8.61a.25.25 0 000-.354l-1.086-1.086z"/>
+                    </svg>
+                    <span class="tool-name">${escapeHtml(msg.toolName)}</span>
+                    <span class="tool-status ${msg.status}">${msg.status === 'running' ? 'Running...' : 'Completed'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        const isUser = msg.role === 'user';
+        return `
+          <div class="message">
+            <div class="message-avatar ${isUser ? 'user' : 'assistant'}">
+              ${isUser ? `
+                <svg viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M10.561 8.073a6.005 6.005 0 013.432 5.142.75.75 0 11-1.498.07 4.5 4.5 0 00-8.99 0 .75.75 0 11-1.498-.07 6.005 6.005 0 013.432-5.142 3.999 3.999 0 115.122 0zM10.5 5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                </svg>
+              ` : `
+                <img class="copilot-logo-small" src="../../assets/logo-128.png" alt="Copilot">
+              `}
+            </div>
+            <div class="message-content">
+              <div class="message-header">
+                <span class="message-author">${isUser ? 'You' : 'Copilot'}</span>
+                <span class="message-time">${formatTime(msg.timestamp)}</span>
+              </div>
+              <div class="message-text">${escapeHtml(msg.content)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Add typing indicator if thinking
+      const typingHtml = isThinking ? `
+        <div class="message">
+          <div class="message-avatar assistant">
+            <img class="copilot-logo-small" src="../../assets/logo-128.png" alt="Copilot">
+          </div>
+          <div class="message-content">
+            <div class="typing-indicator">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+        </div>
+      ` : '';
+
+      messagesContainer.innerHTML = html + typingHtml;
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Update status
+    function updateStatus(status) {
+      statusIndicator.className = 'status-indicator';
+      if (status === 'thinking') {
+        statusIndicator.classList.add('thinking');
+        statusText.textContent = 'Thinking...';
+        isThinking = true;
+      } else if (status === 'error') {
+        statusIndicator.classList.add('error');
+        statusText.textContent = 'Error';
+        isThinking = false;
+      } else {
+        statusText.textContent = 'Connected';
+        isThinking = false;
+      }
+      renderMessages();
+    }
+
+    // Send message
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      // Add user message
+      messages.push({
+        role: 'user',
+        content: text,
+        timestamp: Date.now()
+      });
+      
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+      updateStatus('thinking');
+      renderMessages();
+
+      try {
+        await window.chat.sendMessage(text);
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        updateStatus('error');
+      }
+    }
+
+    // Handle events from session
+    window.chat.onEvent((event) => {
+      console.log('Chat event:', event);
+      
+      if (event.type === 'assistant.message') {
+        messages.push({
+          role: 'assistant',
+          content: event.data.content,
+          timestamp: Date.now()
+        });
+        updateStatus('connected');
+      } else if (event.type === 'assistant.message_chunk') {
+        // Find or create streaming message
+        const lastMsg = messages[messages.length - 1];
+        if (lastMsg && lastMsg.role === 'assistant' && lastMsg.streaming) {
+          lastMsg.content += event.data.content;
+        } else {
+          messages.push({
+            role: 'assistant',
+            content: event.data.content,
+            timestamp: Date.now(),
+            streaming: true
+          });
+        }
+        renderMessages();
+      } else if (event.type === 'tool.execution_start') {
+        messages.push({
+          type: 'tool',
+          toolName: event.data.name,
+          status: 'running',
+          timestamp: Date.now()
+        });
+        renderMessages();
+      } else if (event.type === 'tool.execution_end') {
+        // Update tool status
+        for (let i = messages.length - 1; i >= 0; i--) {
+          if (messages[i].type === 'tool' && messages[i].toolName === event.data.name) {
+            messages[i].status = 'completed';
+            break;
+          }
+        }
+        renderMessages();
+      } else if (event.type === 'turn.complete') {
+        updateStatus('connected');
+      }
+    });
+
+    // Auto-resize textarea
+    messageInput.addEventListener('input', () => {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+    });
+
+    // Send on Enter (Shift+Enter for newline)
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    // Back button
+    backBtn.addEventListener('click', () => {
+      window.chat.goBack();
+    });
+
+    // Initialize
+    async function init() {
+      try {
+        const sessionInfo = await window.chat.getSessionInfo();
+        currentSessionId = sessionInfo.sessionId;
+        sessionTitle.textContent = sessionInfo.title || 'Session';
+        sessionSubtitle.textContent = sessionInfo.subtitle || sessionInfo.sessionId;
+        
+        // Load existing messages
+        const existingMessages = await window.chat.getMessages();
+        if (existingMessages && existingMessages.length > 0) {
+          messages = existingMessages.map(event => {
+            if (event.type === 'user.message') {
+              return {
+                role: 'user',
+                content: event.data.content,
+                timestamp: new Date(event.timestamp).getTime()
+              };
+            } else if (event.type === 'assistant.message') {
+              return {
+                role: 'assistant',
+                content: event.data.content,
+                timestamp: new Date(event.timestamp).getTime()
+              };
+            }
+            return null;
+          }).filter(Boolean);
+          renderMessages();
+        }
+        
+        updateStatus('connected');
+      } catch (error) {
+        console.error('Failed to initialize chat:', error);
+        sessionTitle.textContent = 'Error';
+        sessionSubtitle.textContent = 'Failed to connect';
+        updateStatus('error');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

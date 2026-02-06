@@ -26,6 +26,12 @@ let lastSessionsFetch = 0;
 let cachedSessions = [];
 const CACHE_TTL_MS = 5000; // Cache sessions for 5 seconds
 
+/** @type {Map<string, import('@github/copilot-sdk').CopilotSession>} */
+const activeSessions = new Map();
+
+/** @type {Map<string, Function[]>} */
+const sessionEventHandlers = new Map();
+
 /**
  * Get or create the Copilot client
  * @returns {Promise<import('@github/copilot-sdk').CopilotClient>}
@@ -49,7 +55,6 @@ async function getClient() {
     client = new ClientClass({
       autoStart: true,
       autoRestart: true,
-      useLoggedInUser: true,
     });
     await client.start();
     console.log('✅ Copilot SDK client connected');
@@ -154,6 +159,35 @@ async function resumeSession(sessionId) {
 }
 
 /**
+ * Create a new empty session for interactive chat
+ * @returns {Promise<{success: boolean, sessionId?: string, error?: string}>}
+ */
+async function createSession() {
+  try {
+    const copilotClient = await getClient();
+    const session = await copilotClient.createSession({
+      model: 'claude-sonnet-4',
+    });
+
+    console.log(`✅ Created new session: ${session.sessionId}`);
+    
+    // Store in active sessions
+    activeSessions.set(session.sessionId, session);
+    
+    return {
+      success: true,
+      sessionId: session.sessionId,
+    };
+  } catch (error) {
+    console.error('❌ Failed to create session:', error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
  * Create a new session for a task
  * @param {string} prompt - The task description
  * @returns {Promise<{success: boolean, sessionId?: string, error?: string}>}
@@ -162,7 +196,7 @@ async function createTaskSession(prompt) {
   try {
     const copilotClient = await getClient();
     const session = await copilotClient.createSession({
-      model: 'gpt-5',
+      model: 'claude-sonnet-4',
     });
 
     // Send the initial prompt
@@ -349,12 +383,147 @@ async function listSessionsWithRunning() {
   return mergedSessions;
 }
 
+/**
+ * Join a session for chat - returns the session and sets up event handling
+ * @param {string} sessionId 
+ * @param {Function} eventHandler - Callback for session events
+ * @returns {Promise<{success: boolean, session?: object, error?: string}>}
+ */
+async function joinSession(sessionId, eventHandler) {
+  try {
+    // Check if we already have this session active
+    if (activeSessions.has(sessionId)) {
+      const session = activeSessions.get(sessionId);
+      // Add new event handler
+      if (eventHandler) {
+        const handlers = sessionEventHandlers.get(sessionId) || [];
+        handlers.push(eventHandler);
+        sessionEventHandlers.set(sessionId, handlers);
+      }
+      return {
+        success: true,
+        session: { sessionId: session.sessionId },
+      };
+    }
+
+    const copilotClient = await getClient();
+    const session = await copilotClient.resumeSession(sessionId);
+    
+    // Store the session
+    activeSessions.set(sessionId, session);
+    
+    // Set up event handler
+    if (eventHandler) {
+      sessionEventHandlers.set(sessionId, [eventHandler]);
+    }
+    
+    // Subscribe to events
+    session.on((event) => {
+      const handlers = sessionEventHandlers.get(sessionId) || [];
+      for (const handler of handlers) {
+        try {
+          handler(event);
+        } catch (err) {
+          console.error('Error in session event handler:', err);
+        }
+      }
+    });
+    
+    console.log(`✅ Joined session: ${sessionId}`);
+    
+    return {
+      success: true,
+      session: { sessionId: session.sessionId },
+    };
+  } catch (error) {
+    console.error(`❌ Failed to join session ${sessionId}:`, error.message);
+    return {
+      success: false,
+      sessionId,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Send a message to a joined session
+ * @param {string} sessionId 
+ * @param {string} prompt 
+ * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+ */
+async function sendToSession(sessionId, prompt) {
+  try {
+    const session = activeSessions.get(sessionId);
+    if (!session) {
+      // Try to join first
+      const joinResult = await joinSession(sessionId);
+      if (!joinResult.success) {
+        return { success: false, error: 'Session not found' };
+      }
+    }
+    
+    const activeSession = activeSessions.get(sessionId);
+    const messageId = await activeSession.send({ prompt });
+    
+    console.log(`📤 Sent message to session ${sessionId}: ${prompt.substring(0, 50)}...`);
+    
+    return {
+      success: true,
+      messageId,
+    };
+  } catch (error) {
+    console.error(`❌ Failed to send to session ${sessionId}:`, error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Get messages/events from a session
+ * @param {string} sessionId 
+ * @returns {Promise<Array>}
+ */
+async function getSessionMessages(sessionId) {
+  try {
+    let session = activeSessions.get(sessionId);
+    if (!session) {
+      // Try to resume the session to get messages
+      const copilotClient = await getClient();
+      session = await copilotClient.resumeSession(sessionId);
+      activeSessions.set(sessionId, session);
+    }
+    
+    const messages = await session.getMessages();
+    return messages;
+  } catch (error) {
+    console.error(`❌ Failed to get messages for session ${sessionId}:`, error.message);
+    return [];
+  }
+}
+
+/**
+ * Leave a session (cleanup handlers)
+ * @param {string} sessionId 
+ */
+function leaveSession(sessionId) {
+  sessionEventHandlers.delete(sessionId);
+  // Don't destroy the session, just remove handlers
+  console.log(`👋 Left session: ${sessionId}`);
+}
+
 module.exports = {
   listSessions,
   listSessionsWithRunning,
   resumeSession,
+  createSession,
   createTaskSession,
   stopClient,
   focusConduitWindow,
   discoverRunningProcesses,
+  joinSession,
+  sendToSession,
+  getSessionMessages,
+  leaveSession,
 };

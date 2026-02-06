@@ -51,7 +51,7 @@
     .copilot-logo {
       width: 24px;
       height: 24px;
-      color: #2f81f7;
+      border-radius: 6px;
     }
 
     .title {
@@ -76,7 +76,7 @@
       border: 1px solid #238636;
       color: white;
       padding: 8px 14px;
-      border-radius: 6px;
+      border-radius: 6px 0 0 6px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
@@ -99,27 +99,107 @@
       height: 14px;
     }
 
+    .split-btn-group {
+      -webkit-app-region: no-drag;
+      display: flex;
+      position: relative;
+    }
+
+    .split-btn-dropdown {
+      background: #238636;
+      border: 1px solid #238636;
+      border-left: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 8px 8px;
+      border-radius: 0 6px 6px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: all 0.15s ease;
+    }
+
+    .split-btn-dropdown:hover {
+      background: #2ea043;
+    }
+
+    .split-btn-dropdown svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      min-width: 160px;
+      z-index: 100;
+      display: none;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      color: #e6edf3;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .dropdown-item:hover {
+      background: #30363d;
+    }
+
+    .dropdown-item:first-child {
+      border-radius: 6px 6px 0 0;
+    }
+
+    .dropdown-item:last-child {
+      border-radius: 0 0 6px 6px;
+    }
+
+    .dropdown-item svg {
+      width: 16px;
+      height: 16px;
+      color: #8b949e;
+    }
+
+    .dropdown-item:hover svg {
+      color: #e6edf3;
+    }
+
     /* Sections */
     .sections {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 12px;
       -webkit-app-region: no-drag;
     }
 
     .section {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
+      padding: 0 4px;
     }
 
     .section-title {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -128,158 +208,142 @@
 
     .section-badge {
       background: #30363d;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-size: 10px;
       color: #8b949e;
     }
 
-    /* Cards */
-    .card {
+    /* Session rows */
+    .session-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
       background: #21262d;
       border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 8px;
-      transition: all 0.15s ease;
+      border-radius: 6px;
+      margin-bottom: 6px;
       cursor: pointer;
+      transition: all 0.15s ease;
     }
 
-    .card:hover {
+    .session-row:hover {
       background: #262c36;
       border-color: #3d444d;
     }
 
-    .card-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 8px;
+    .session-row:last-child {
+      margin-bottom: 0;
     }
 
-    .card-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #e6edf3;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .card-repo {
-      font-size: 12px;
-      color: #8b949e;
-      margin-top: 4px;
-    }
-
-    .card-activity {
-      font-size: 13px;
-      color: #c9d1d9;
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-
-    .card-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .card-users {
-      display: flex;
-      align-items: center;
-    }
-
-    .avatar {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
+    .session-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
       background: #30363d;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
-      font-weight: 600;
-      color: #8b949e;
-      border: 2px solid #161b22;
-      margin-left: -6px;
+      flex-shrink: 0;
     }
 
-    .avatar:first-child {
-      margin-left: 0;
-    }
-
-    .card-time {
-      font-size: 11px;
+    .session-icon svg {
+      width: 14px;
+      height: 14px;
       color: #8b949e;
     }
 
-    .card-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
+    .session-icon.running {
+      background: rgba(47, 129, 247, 0.15);
     }
 
-    .btn-jump {
-      background: transparent;
-      border: 1px solid #30363d;
+    .session-icon.running svg {
       color: #58a6ff;
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 12px;
+    }
+
+    .session-icon.active {
+      background: rgba(35, 134, 54, 0.15);
+    }
+
+    .session-icon.active svg {
+      color: #3fb950;
+    }
+
+    .session-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .session-name {
+      font-size: 13px;
       font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s ease;
+      color: #e6edf3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .btn-jump:hover {
-      background: rgba(88, 166, 255, 0.1);
-      border-color: #58a6ff;
-    }
-
-    /* Status indicators */
-    .status {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 2px 8px;
-      border-radius: 12px;
+    .session-detail {
       font-size: 11px;
+      color: #8b949e;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    .session-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .session-time {
+      font-size: 10px;
+      color: #8b949e;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
       font-weight: 500;
     }
 
-    .status-running {
+    .status-badge.running {
       background: rgba(47, 129, 247, 0.15);
       color: #58a6ff;
     }
 
-    .status-active {
+    .status-badge.active {
       background: rgba(35, 134, 54, 0.15);
       color: #3fb950;
     }
 
-    .status-idle {
+    .status-badge.idle {
       background: rgba(210, 153, 34, 0.15);
       color: #d29922;
     }
 
-    .status-disconnected {
-      background: rgba(139, 148, 158, 0.15);
+    .status-badge.disconnected {
+      background: rgba(139, 148, 158, 0.1);
       color: #8b949e;
     }
 
-    .status-dot {
-      width: 6px;
-      height: 6px;
+    .status-badge .dot {
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: currentColor;
     }
 
-    .status-running .status-dot {
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    .status-active .status-dot {
+    .status-badge.running .dot,
+    .status-badge.active .dot {
       animation: pulse 2s ease-in-out infinite;
     }
 
@@ -288,66 +352,85 @@
       50% { opacity: 0.4; }
     }
 
+    .btn-action {
+      background: transparent;
+      border: 1px solid #30363d;
+      color: #58a6ff;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-action:hover {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: #58a6ff;
+    }
+
     /* Queue card */
     .queue-card {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px;
+      gap: 10px;
+      padding: 8px 10px;
     }
 
     .queue-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
       background: rgba(47, 129, 247, 0.15);
-      border: 1px solid rgba(47, 129, 247, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
       color: #58a6ff;
+      flex-shrink: 0;
     }
 
     .queue-icon svg {
-      width: 18px;
-      height: 18px;
+      width: 14px;
+      height: 14px;
     }
 
     .queue-info {
       flex: 1;
+      min-width: 0;
     }
 
     .queue-topic {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
       color: #e6edf3;
     }
 
     .queue-context {
-      font-size: 12px;
+      font-size: 11px;
       color: #8b949e;
-      margin-top: 2px;
+      margin-top: 1px;
     }
 
     /* Empty state */
     .empty-state {
       text-align: center;
-      padding: 32px 16px;
+      padding: 20px 16px;
       color: #8b949e;
     }
 
     .empty-icon {
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .empty-icon svg {
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
       color: #30363d;
     }
 
     .empty-text {
-      font-size: 13px;
+      font-size: 12px;
       color: #8b949e;
     }
 
@@ -387,20 +470,31 @@
   <div class="container">
     <div class="header">
       <div class="header-left">
-        <svg class="copilot-logo" viewBox="0 0 32 32" fill="currentColor">
-          <rect x="4" y="10" width="24" height="16" rx="4" ry="4"/>
-          <circle cx="12" cy="18" r="3" fill="#0d1117"/>
-          <circle cx="20" cy="18" r="3" fill="#0d1117"/>
-        </svg>
+        <img class="copilot-logo" src="../../assets/logo-128.png" alt="Copilot">
         <span class="title">Copilot Tasks</span>
         <span class="header-badge">Dashboard</span>
       </div>
-      <button class="new-request-btn" id="newRequestBtn">
-        <svg viewBox="0 0 16 16" fill="currentColor">
-          <path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 110 1.5H8.5v4.25a.75.75 0 11-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/>
-        </svg>
-        New Request
-      </button>
+      <div class="split-btn-group">
+        <button class="new-request-btn" id="newRequestBtn">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 110 1.5H8.5v4.25a.75.75 0 11-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/>
+          </svg>
+          New Request
+        </button>
+        <button class="split-btn-dropdown" id="dropdownBtn">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/>
+          </svg>
+        </button>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <div class="dropdown-item" id="voiceRequestBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+            </svg>
+            Voice Request
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="sections">
@@ -484,19 +578,17 @@
       }
 
       queueList.innerHTML = queue.map(call => `
-        <div class="card queue-card" data-call-id="${call.callId}">
+        <div class="session-row" data-call-id="${call.callId}">
           <div class="queue-icon">
-            <svg viewBox="0 0 32 32" fill="currentColor">
-              <rect x="4" y="10" width="24" height="16" rx="4" ry="4"/>
-              <circle cx="12" cy="18" r="3" fill="#0d1117"/>
-              <circle cx="20" cy="18" r="3" fill="#0d1117"/>
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M3.654 1.328a.678.678 0 00-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.568 17.568 0 004.168 6.608 17.569 17.569 0 006.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 00-.063-1.015l-2.307-1.794a.678.678 0 00-.58-.122l-2.19.547a1.745 1.745 0 01-1.657-.459L5.482 8.062a1.745 1.745 0 01-.46-1.657l.548-2.19a.678.678 0 00-.122-.58L3.654 1.328z"/>
             </svg>
           </div>
-          <div class="queue-info">
-            <div class="queue-topic">${escapeHtml(call.topic)}</div>
-            <div class="queue-context">${escapeHtml(call.context || 'Waiting...')}</div>
+          <div class="session-info">
+            <div class="session-name">${escapeHtml(call.topic)}</div>
+            <div class="session-detail">${escapeHtml(call.context || 'Waiting...')}</div>
           </div>
-          <div class="card-time">${formatTime(call.timestamp)}</div>
+          <span class="session-time">${formatTime(call.timestamp)}</span>
         </div>
       `).join('');
     }
@@ -522,38 +614,31 @@
         return;
       }
 
-      sessionsList.innerHTML = sessions.map(session => `
-        <div class="card" data-session-id="${session.id}" data-tty="${session.tty || ''}">
-          <div class="card-header">
-            <div>
-              <div class="card-title">
-                ${escapeHtml(session.cwd ? session.cwd.split('/').pop() : session.repository)}
-              </div>
-              <div class="card-repo">
-                ${session.cwd ? `<span class="branch-tag" title="${escapeHtml(session.cwd)}">${escapeHtml(session.cwd)}</span>` : `<span class="branch-tag"><svg style="width:10px;height:10px;margin-right:3px" viewBox="0 0 16 16" fill="currentColor"><path d="M11.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122V6A2.5 2.5 0 0110 8.5H6a1 1 0 00-1 1v1.128a2.251 2.251 0 11-1.5 0V5.372a2.25 2.25 0 111.5 0v1.836A2.492 2.492 0 016 7h4a1 1 0 001-1v-.628A2.25 2.25 0 019.5 3.25zM4.25 12a.75.75 0 100 1.5.75.75 0 000-1.5zM3.5 3.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0z"/></svg>${escapeHtml(session.branch)}</span>`}
-              </div>
+      sessionsList.innerHTML = sessions.map(session => {
+        const name = session.cwd ? session.cwd.split('/').pop() : session.repository;
+        const detail = session.lastActivity.length > 50 ? session.lastActivity.substring(0, 47) + '...' : session.lastActivity;
+        
+        return `
+          <div class="session-row" data-session-id="${session.id}" onclick="jumpIntoSession('${session.id}', '${session.tty || ''}')">
+            <div class="session-icon ${session.status}">
+              <svg viewBox="0 0 16 16" fill="currentColor">
+                <path d="M0 2.75C0 1.784.784 1 1.75 1h12.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0114.25 15H1.75A1.75 1.75 0 010 13.25zm1.75-.25a.25.25 0 00-.25.25v10.5c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25V2.75a.25.25 0 00-.25-.25zM3.5 6.25a.75.75 0 01.75-.75h7a.75.75 0 010 1.5h-7a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h4a.75.75 0 000-1.5z"/>
+              </svg>
             </div>
-            <div class="status status-${session.status}">
-              <span class="status-dot"></span>
-              ${session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+            <div class="session-info">
+              <div class="session-name">${escapeHtml(name)}</div>
+              <div class="session-detail">${escapeHtml(detail)}</div>
+            </div>
+            <div class="session-meta">
+              <span class="session-time">${formatTime(session.lastActivityTime)}</span>
+              <div class="status-badge ${session.status}">
+                <span class="dot"></span>
+                ${session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+              </div>
             </div>
           </div>
-          <div class="card-activity">${escapeHtml(session.lastActivity)}</div>
-          <div class="card-meta">
-            <div class="card-users">
-              ${session.connectedUsers.map(user => `
-                <div class="avatar" title="${escapeHtml(user)}">${getInitials(user)}</div>
-              `).join('')}
-            </div>
-            <div class="card-time">${formatTime(session.lastActivityTime)}</div>
-          </div>
-          ${session.canJoin ? `
-            <div class="card-actions">
-              <button class="btn-jump" onclick="jumpIntoSession('${session.id}', '${session.tty || ''}')">${session.status === 'running' ? 'Focus →' : 'Jump In →'}</button>
-            </div>
-          ` : ''}
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     // Escape HTML
@@ -568,9 +653,29 @@
       await window.dashboard.jumpIntoSession(sessionId, tty || null);
     }
 
-    // New request button
+    // Dropdown handling
+    const dropdownBtn = document.getElementById('dropdownBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    
+    dropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdownMenu.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      dropdownMenu.classList.remove('show');
+    });
+
+    // New request button (chat)
     document.getElementById('newRequestBtn').addEventListener('click', async () => {
-      await window.dashboard.newRequest();
+      await window.dashboard.newChatRequest();
+    });
+
+    // Voice request button
+    document.getElementById('voiceRequestBtn').addEventListener('click', async () => {
+      dropdownMenu.classList.remove('show');
+      await window.dashboard.newVoiceRequest();
     });
 
     // Load dashboard data

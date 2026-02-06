@@ -14,7 +14,7 @@ const { Tray, Menu, nativeImage, BrowserWindow, ipcMain, session, systemPreferen
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { registerVoiceHandlers, closeActiveSession } = require('./elevenLabs');
-const { listSessionsWithRunning, resumeSession, createTaskSession, stopClient, focusConduitWindow } = require('./copilotSdk');
+const { listSessionsWithRunning, resumeSession, createTaskSession, stopClient, focusConduitWindow, joinSession, sendToSession, getSessionMessages, leaveSession } = require('./copilotSdk');
 
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -83,6 +83,12 @@ let historyWindow = null;
 
 /** @type {Electron.BrowserWindow | null} */
 let dashboardWindow = null;
+
+/** @type {Electron.BrowserWindow | null} */
+let chatWindow = null;
+
+/** @type {{ sessionId: string, title?: string, subtitle?: string } | null} */
+let currentChatSession = null;
 
 /** @type {import('express').Application} */
 let server = null;
@@ -347,6 +353,77 @@ function createDashboardWindow() {
   return dashboardWindow;
 }
 
+/**
+ * Create and show the chat window for a session
+ */
+function createChatWindow(sessionId, title, subtitle) {
+  // Close any existing chat window
+  if (chatWindow && !chatWindow.isDestroyed()) {
+    chatWindow.close();
+  }
+
+  // Store current session info
+  currentChatSession = { sessionId, title, subtitle };
+
+  const { screen } = require('electron');
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+  
+  const windowWidth = 480;
+  const windowHeight = 640;
+
+  chatWindow = new BrowserWindow({
+    width: windowWidth,
+    height: windowHeight,
+    x: Math.round((screenWidth - windowWidth) / 2),
+    y: Math.round((screenHeight - windowHeight) / 2),
+    resizable: true,
+    minWidth: 380,
+    minHeight: 480,
+    frame: false,
+    transparent: true,
+    vibrancy: 'popover',
+    visualEffectState: 'active',
+    backgroundColor: '#00000000',
+    hasShadow: true,
+    titleBarStyle: 'hidden',
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload-chat.js'),
+    },
+  });
+
+  chatWindow.loadFile(path.join(__dirname, '../renderer/chat.html'));
+
+  chatWindow.once('ready-to-show', async () => {
+    // Join the session and set up event forwarding
+    const result = await joinSession(sessionId, (event) => {
+      if (chatWindow && !chatWindow.isDestroyed()) {
+        chatWindow.webContents.send('chat-event', event);
+      }
+    });
+    
+    if (result.success) {
+      chatWindow.show();
+    } else {
+      console.error('Failed to join session:', result.error);
+      chatWindow.close();
+    }
+  });
+
+  chatWindow.on('closed', () => {
+    if (currentChatSession) {
+      leaveSession(currentChatSession.sessionId);
+    }
+    chatWindow = null;
+    currentChatSession = null;
+  });
+
+  return chatWindow;
+}
+
 async function handleIncomingCall(callRequest) {
   console.log('Incoming call:', callRequest.topic);
 
@@ -501,36 +578,91 @@ ipcMain.handle('jump-into-session', async (event, sessionId, tty) => {
     dashboardWindow.close();
   }
   
-  // If we have a TTY, focus the Conduit window directly
-  if (tty) {
+  // If we have a TTY and it's a running process without a stored session - focus the terminal
+  if (tty && sessionId.startsWith('running-')) {
     const result = await focusConduitWindow(tty);
     return { success: result.success, focused: true };
   }
   
-  // Otherwise, resume the session via SDK
-  const result = await resumeSession(sessionId);
+  // For stored sessions, open the chat interface
+  const sessions = await listSessionsWithRunning();
+  const sessionInfo = sessions.find(s => s.id === sessionId);
   
-  if (result.success && result.workspacePath) {
-    // Open a new terminal with copilot CLI in that session
-    const copilotCmd = `copilot --resume ${sessionId}`;
-    
-    // On macOS, open Conduit with the command
-    if (process.platform === 'darwin') {
-      const script = `tell application "Conduit"
-        activate
-      end tell`;
-      require('child_process').exec(`osascript -e '${script}'`);
-    } else {
-      // On other platforms, try to open in default terminal
-      shell.openExternal(`terminal://${copilotCmd}`);
-    }
-  }
+  createChatWindow(
+    sessionId,
+    sessionInfo?.cwd ? sessionInfo.cwd.split('/').pop() : sessionInfo?.repository || 'Session',
+    sessionInfo?.lastActivity || sessionId
+  );
   
-  return result;
+  return { success: true, chatOpened: true };
 });
 
-ipcMain.handle('new-request', async () => {
-  console.log('📞 New request initiated from dashboard');
+// Chat IPC handlers
+ipcMain.handle('chat-get-session-info', async () => {
+  if (!currentChatSession) {
+    return { sessionId: null, title: 'No Session', subtitle: '' };
+  }
+  return currentChatSession;
+});
+
+ipcMain.handle('chat-get-messages', async () => {
+  if (!currentChatSession) {
+    return [];
+  }
+  return await getSessionMessages(currentChatSession.sessionId);
+});
+
+ipcMain.handle('chat-send-message', async (event, text) => {
+  if (!currentChatSession) {
+    return { success: false, error: 'No active session' };
+  }
+  return await sendToSession(currentChatSession.sessionId, text);
+});
+
+ipcMain.handle('chat-go-back', async () => {
+  // Close chat and open dashboard
+  if (chatWindow && !chatWindow.isDestroyed()) {
+    chatWindow.close();
+  }
+  createDashboardWindow();
+  return { success: true };
+});
+
+// New chat request - opens chat interface with a new session
+ipcMain.handle('new-chat-request', async () => {
+  console.log('💬 New chat request initiated from dashboard');
+  
+  // Close the dashboard
+  if (dashboardWindow && !dashboardWindow.isDestroyed()) {
+    dashboardWindow.close();
+  }
+  
+  try {
+    // Create a new session
+    const { createSession } = require('./copilotSdk');
+    const result = await createSession();
+    
+    if (result.success && result.sessionId) {
+      // Open the chat window for this new session
+      createChatWindow(
+        result.sessionId,
+        'New Request',
+        'What would you like help with?'
+      );
+      return { success: true, sessionId: result.sessionId };
+    } else {
+      console.error('❌ Failed to create session:', result.error);
+      return { success: false, error: result.error };
+    }
+  } catch (error) {
+    console.error('❌ Failed to create chat session:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// New voice request - uses the voice call flow
+ipcMain.handle('new-voice-request', async () => {
+  console.log('🎤 New voice request initiated from dashboard');
   
   // Close the dashboard
   if (dashboardWindow && !dashboardWindow.isDestroyed()) {
