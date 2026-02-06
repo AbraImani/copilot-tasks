@@ -49,7 +49,8 @@ const sessionEventHandlers = new Map();
 
 /**
  * Get or create a Copilot client for a specific workspace directory.
- * The default (no cwd) client is keyed by empty string.
+ * When called without args, reuses any existing client (avoids spinning up
+ * a redundant CLI server just for listing sessions).
  * @param {string} [cwd]
  * @returns {Promise<import('@github/copilot-sdk').CopilotClient>}
  */
@@ -58,6 +59,11 @@ async function getClient(cwd) {
 
   if (clientsByWorkspace.has(key)) {
     return clientsByWorkspace.get(key);
+  }
+
+  // When no cwd requested, reuse any already-running client
+  if (!cwd && clientsByWorkspace.size > 0) {
+    return clientsByWorkspace.values().next().value;
   }
 
   const ClientClass = await loadSDK();
@@ -521,7 +527,8 @@ async function getSessionMessages(sessionId) {
  */
 function leaveSession(sessionId) {
   sessionEventHandlers.delete(sessionId);
-  // Don't destroy the session, just remove handlers
+  // Invalidate cache so the dashboard fetches fresh data
+  lastSessionsFetch = 0;
   console.log(`👋 Left session: ${sessionId}`);
 }
 

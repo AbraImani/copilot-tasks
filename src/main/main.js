@@ -357,7 +357,14 @@ function createDashboardWindow() {
  * Create and show the chat window for a session
  */
 function createChatWindow(sessionId, title, subtitle, cwd) {
-  // Close any existing chat window
+  // If we already have a chat window for this session, just re-show it
+  if (chatWindow && !chatWindow.isDestroyed() && currentChatSession && currentChatSession.sessionId === sessionId) {
+    chatWindow.show();
+    chatWindow.focus();
+    return chatWindow;
+  }
+
+  // Close any existing chat window for a different session
   if (chatWindow && !chatWindow.isDestroyed()) {
     chatWindow.close();
   }
@@ -620,9 +627,9 @@ ipcMain.handle('chat-send-message', async (event, text) => {
 });
 
 ipcMain.handle('chat-go-back', async () => {
-  // Close chat and open dashboard
+  // Hide chat window (keep session alive) and open dashboard
   if (chatWindow && !chatWindow.isDestroyed()) {
-    chatWindow.close();
+    chatWindow.hide();
   }
   createDashboardWindow();
   return { success: true };
