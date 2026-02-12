@@ -1,9 +1,9 @@
 # Copilot Tasks — Complete Architectural Audit
 
-> **Audit Date:** 2025  
+> **Audit Date:** February 12, 2026
 > **Repository:** `copilot-tasks`  
 > **Scope:** Full architectural, technical, and strategic audit  
-> **Auditor:** AI-assisted review  
+> **Auditor:** Abraham Imani Bahati (and AI-assisted technical review )
 > **License context:** Open-source friendly  
 
 ---
@@ -18,6 +18,7 @@
 6. [Phase 5 — Pull Request Proposals](#6-phase-5--pull-request-proposals)
 7. [Phase 6 — Code Improvements](#7-phase-6--code-improvements)
 8. [Phase 7 — Summary & Recommendations](#8-phase-7--summary--recommendations)
+9. [Open Questions for Maintainer](#open-questions-for-maintainer)
 
 ---
 
@@ -82,14 +83,14 @@
 
 ### 2.2 File-by-File Analysis
 
-#### `package.json` (94 lines)
+#### `package.json` 
 - **Type**: `"commonjs"` — while the SDK (`@github/copilot-sdk`) is ESM-only, requiring dynamic `import()`.
 - **Key dependencies**: `@github/copilot-sdk@^0.1.9-preview.0`, `better-sqlite3`, `express`, `ws`, `dotenv`, `uuid`.
 - **Unused dependencies**: `react`, `react-dom`, `@fluentui/react-components` — none of the renderers use React.
 - **Build**: Vite + electron-builder targeting macOS (DMG) and Windows (NSIS).
 - **Scripts**: `dev`, `build`, `test:call`, `build:mac`, `build:installer`.
 
-#### `src/main/main.js` (823 lines)
+#### `src/main/main.js`
 The monolithic heart of the application. Responsibilities include:
 - **Tray creation and menu management** with dynamic context menu.
 - **Window management**: Call window (420×500, always-on-top), dashboard (420×520), chat (480×640), history windows.
@@ -100,7 +101,7 @@ The monolithic heart of the application. Responsibilities include:
 
 **Technical debt**: This file violates single-responsibility heavily. It should be decomposed into separate modules for window management, IPC routing, HTTP API, call management, and tray logic.
 
-#### `src/main/copilotSdk.js` (595 lines)
+#### `src/main/copilotSdk.js`
 SDK integration layer providing:
 - **`loadSDK()`**: Dynamic ESM import via `import()` from CommonJS context.
 - **`getClient(cwd)`**: Per-workspace client caching in `clientsByWorkspace` Map.
@@ -113,7 +114,7 @@ SDK integration layer providing:
 
 **Notable patterns**: The `loadSDK()` function caches the SDK module. Session event handlers are stored in `sessionEventHandlers` Map with cleanup on leave. Error handling is generally try/catch with console.error logging.
 
-#### `src/main/elevenLabs.js` (325 lines)
+#### `src/main/elevenLabs.js`
 Eleven Labs Conversational AI integration:
 - **WebSocket protocol**: Connects to `wss://api.elevenlabs.io/v1/convai/conversation`.
 - **Single active session**: Only one `activeWebSocket` — no concurrent call support.
@@ -149,14 +150,14 @@ Chat preload exposing:
 Simulation preload for demo call windows:
 - `electronAPI.acceptSimulatedCall()`, `declineSimulatedCall()`.
 
-#### `src/renderer/call.html` (731 lines)
+#### `src/renderer/call.html` 
 The core call UI with two views:
 - **Incoming call view**: Shows caller name, topic, context, questions with accept/deny buttons.
 - **Active call view**: Duration timer, transcript display, microphone capture (ScriptProcessor, 16kHz, PCM16 → base64), audio playback queue, text input toggle.
 
 **Audio pipeline**: `getUserMedia()` → `AudioContext(16kHz)` → `ScriptProcessor(4096)` → float32→int16→base64 → IPC. Playback reverses the process with a queue-based approach.
 
-#### `src/renderer/dashboard.html` (798 lines)
+#### `src/renderer/dashboard.html` 
 Session dashboard with:
 - **Call queue section** with badge counter and queue card rendering.
 - **Sessions section** showing SDK sessions merged with running terminal processes.
@@ -164,7 +165,7 @@ Session dashboard with:
 - **Auto-refresh**: `setInterval(loadData, 5000)`.
 - Session rows with action buttons for chat, terminal, and focus.
 
-#### `src/renderer/chat.html` (823 lines)
+#### `src/renderer/chat.html` 
 Full chat interface with:
 - **Message rendering**: User and assistant message bubbles with timestamps.
 - **Tool execution display**: Shows running/completed tool executions inline.
@@ -198,7 +199,7 @@ Copilot CLI hook:
 #### `spawn-calls.js`
 Demo script that spawns 4 simulated call windows (Teams, Slack, FaceTime, Agent) in sequence with 3-second intervals. Used for demonstration purposes.
 
-#### `test-call.js` (135 lines)
+#### `test-call.js`
 Test CLI that simulates a voice call by:
 1. Checking server status.
 2. Submitting a call via HTTP API.
@@ -551,7 +552,7 @@ interface CopilotTasksPlugin {
 - Add rate limiting (e.g., 10 requests/second per IP).
 - Update MCP server and hooks to read token from the known location.
 
-**Impact**: Closes the most critical security gap — unauthenticated localhost API.
+**Impact**: Addresses the most significant security risk identified in the current implementation — unauthenticated localhost API.
 
 **Files changed**:
 - `src/main/main.js` (or new `httpApi.js`)
@@ -822,6 +823,15 @@ workletNode.port.onmessage = (event) => {
 | **P4** | Plugin system | Low | High |
 | **P4** | Cloud architecture | Low | Very High |
 
+## Open Questions for Maintainer
+
+1. Is the HTTP API intentionally unauthenticated for local-only usage?
+2. Are React and Fluent UI dependencies planned for a future renderer refactor?
+3. Is macOS-first support a deliberate strategic decision?
+4. Would you be open to introducing structured logging as a baseline?
+5. What is the long-term vision: local power tool or cloud-ready platform?
+
+
 ### Recommended Execution Order
 
 1. **Security first**: PR #2 (API auth + validation) — immediate security improvement.
@@ -841,6 +851,10 @@ workletNode.port.onmessage = (event) => {
 5. **Documentation** — Architecture diagrams, API docs, and contributing guidelines will lower the barrier for contributors.
 
 The project has strong potential and a clear value proposition. With the improvements outlined in this audit, it can evolve into a robust, community-driven tool that meaningfully enhances AI-assisted development workflows.
+
+---
+
+I would be happy to implement one or more of the proposed improvements in a focused Pull Request if aligned with the project's direction.
 
 ---
 
